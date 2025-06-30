@@ -1,0 +1,73 @@
+import { FaWalking } from "react-icons/fa";
+import { MdOutlineDeliveryDining } from "react-icons/md";
+import { RiCalendarScheduleLine } from "react-icons/ri";
+
+const DelivOrPickUp = () => {
+  return (
+    <div className="px-4">
+      <h1 className="text-2xl font-bold pt-6 pb-2">Delivery or PickUp?</h1>
+      <div className="flex items-center gap-2 mb-2">
+        <label
+          className="flex items-center w-full gap-2 cursor-pointer"
+          htmlFor="delivery"
+        >
+          <div className="w-10 h-10 flex justify-center items-center">
+            <MdOutlineDeliveryDining size={35} />
+          </div>
+          <div>
+            <p>Delivery</p>
+            <p className="text-base text-gray-500">30-40 min</p>
+          </div>
+        </label>
+        <input
+          className=" appearance-none w-6 h-6 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-7 rounded-full border-3 cursor-pointer "
+          type="radio"
+          name="deliveryMethod"
+          id="delivery"
+        />
+      </div>
+      <div className="flex items-center gap-2 mb-2">
+        <label
+          className="flex items-center w-full gap-2 cursor-pointer"
+          htmlFor="pickUp"
+        >
+          <div className="w-10 h-10 flex justify-center items-center">
+            <FaWalking size={30} />
+          </div>
+          <div>
+            <p>Pick Up</p>
+            <p className="text-base text-gray-500">20-30 min</p>
+          </div>
+        </label>
+        <input
+          className=" appearance-none w-6 h-6 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-7 rounded-full border-3 cursor-pointer "
+          type="radio"
+          name="deliveryMethod"
+          id="pickUp"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <label
+          className="flex items-center w-full gap-2 cursor-pointer"
+          htmlFor="schedule"
+        >
+          <div className="w-10 h-10 flex justify-center items-center">
+            <RiCalendarScheduleLine size={30} />
+          </div>
+          <div>
+            <p>Schedule</p>
+            <p className="text-base text-gray-500">Select a time</p>
+          </div>
+        </label>
+        <input
+          className=" appearance-none w-6 h-6 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-7 rounded-full border-3 cursor-pointer "
+          type="radio"
+          name="schedule"
+          id="schedule"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default DelivOrPickUp;
