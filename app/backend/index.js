@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const mongoUri = "mongodb+srv://samueldagbo50:Sammy%40mongo1@cluster0.k1dcltl.mongodb.net/food-delivery?retryWrites=true&w=majority&appName=Cluster0";
 
 const app = express();
 app.use(cors());
@@ -9,52 +8,74 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const Order = require("./models/Order");
-const FinishedDelivery = mongoose.model("FinishedDelivery", new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  userName: { type: String, required: true },
-  items: [
+const FinishedDelivery = mongoose.model(
+  "FinishedDelivery",
+  new mongoose.Schema(
     {
-      menuItem: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem" },
-      quantity: Number,
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      userName: { type: String, required: true },
+      items: [
+        {
+          menuItem: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem" },
+          quantity: Number,
+        },
+      ],
+      contact: String,
+      address: String,
+      riderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      pending: String,
+      confirmed: String,
+      preparing: String,
+      packing: String,
+      outForDelivery: String,
     },
-  ],
-  contact: String,
-  address: String,
-  riderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-  pending: String,
-  confirmed: String,
-  preparing: String,
-  packing: String,
-  outForDelivery: String,
-}, { timestamps: true }));
+    { timestamps: true }
+  )
+);
 
 const RiderFinishedDelivery = require("./models/RiderFinishedDelivery");
 
-mongoose.connect("mongodb+srv://samueldagbo50:Sammy%40mongo1@cluster0.k1dcltl.mongodb.net/food-delivery?retryWrites=true&w=majority&appName=Cluster0", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("MongoDB connected"))
+mongoose
+  .connect(
+    "mongodb+srv://samueldagbo50:Sammy%40mongo1@cluster0.k1dcltl.mongodb.net/food-delivery?retryWrites=true&w=majority&appName=Cluster0",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
 // SCHEMAS
-const User = mongoose.model("User", new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  phone: String,
-  role: { type: String, enum: ["user", "admin", "rider"], default: "user" }
-}));
+const User = mongoose.model(
+  "User",
+  new mongoose.Schema({
+    name: String,
+    email: String,
+    password: String,
+    phone: String,
+    role: { type: String, enum: ["user", "admin", "rider"], default: "user" },
+  })
+);
 
-const MenuItem = mongoose.model("MenuItem", new mongoose.Schema({
-  name: String,
-  price: Number,
-  category: String,
-  available: { type: Boolean, default: true },
-  image: { type: String, default: "" } // stores Base64 string
-}));
-
-
+const MenuItem = mongoose.model(
+  "MenuItem",
+  new mongoose.Schema({
+    name: String,
+    price: Number,
+    category: String,
+    available: { type: Boolean, default: true },
+    image: { type: String, default: "" }, // stores Base64 string
+  })
+);
 
 const fileUpload = require("express-fileupload");
 app.use(fileUpload());
@@ -67,7 +88,9 @@ app.post("/admin/create-menu-item", async (req, res) => {
     const { name, price, category, imageBase64 } = req.body;
 
     if (!name || !price || !category) {
-      return res.status(400).json({ success: false, error: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing required fields" });
     }
 
     const newItemData = {
@@ -86,7 +109,9 @@ app.post("/admin/create-menu-item", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Error saving menu item:", err);
-    res.status(500).json({ success: false, error: "Server error while saving menu item" });
+    res
+      .status(500)
+      .json({ success: false, error: "Server error while saving menu item" });
   }
 });
 
@@ -94,12 +119,16 @@ app.post("/admin/create-menu-item", async (req, res) => {
 app.post("/signup", async (req, res) => {
   const { name, email, password, phone } = req.body;
   if (!name || !email || !password || !phone) {
-    return res.status(400).json({ success: false, error: "All fields are required" });
+    return res
+      .status(400)
+      .json({ success: false, error: "All fields are required" });
   }
   try {
     const existing = await User.findOne({ $or: [{ email }, { name }] });
     if (existing) {
-      return res.status(409).json({ success: false, error: "User already exists" });
+      return res
+        .status(409)
+        .json({ success: false, error: "User already exists" });
     }
     const user = new User({ name, email, password, phone });
     await user.save();
@@ -127,48 +156,153 @@ app.get("/menu", async (req, res) => {
   }
 });
 
-
-
-
 app.get("/seed-menu", async (req, res) => {
   try {
     const items = [
-      { name: "Akple/Banku with fresh Tilapia light soup", price: 100, category: "BANKU / AKPLE ZONE" },
-      { name: "Akple/Banku with hot pepper and fried/ grilled Tilapia", price: 100, category: "BANKU / AKPLE ZONE" },
-      { name: "Akple/Banku with hot pepper and fried chicken", price: 70, category: "BANKU / AKPLE ZONE" },
-      { name: "Akple/Banku with Gbomanyana", price: 90, category: "BANKU / AKPLE ZONE" },
-      { name: "Eba with Ademe Mix with Okro", price: 75, category: "LOCAL MIX ZONE" },
-      { name: "Boiled Yam with Kontomire/Garden Eggs/Egg Stews", price: 80, category: "LOCAL MIX ZONE" },
-      { name: "Boiled Yam & Plantain with Kontomire/ Garden Eggss/Egg Stew", price: 90, category: "LOCAL MIX ZONE" },
+      {
+        name: "Akple/Banku with fresh Tilapia light soup",
+        price: 100,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple/Banku with hot pepper and fried/ grilled Tilapia",
+        price: 100,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple/Banku with hot pepper and fried chicken",
+        price: 70,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple/Banku with Gbomanyana",
+        price: 90,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Eba with Ademe Mix with Okro",
+        price: 75,
+        category: "LOCAL MIX ZONE",
+      },
+      {
+        name: "Boiled Yam with Kontomire/Garden Eggs/Egg Stews",
+        price: 80,
+        category: "LOCAL MIX ZONE",
+      },
+      {
+        name: "Boiled Yam & Plantain with Kontomire/ Garden Eggss/Egg Stew",
+        price: 90,
+        category: "LOCAL MIX ZONE",
+      },
       { name: "Gariforto", price: 85, category: "LOCAL MIX ZONE" },
-      { name: "Banku/Akple with Okro (Beef, Salmon, Crab, Wele, Tilapia)", price: 100, category: "DE BLISS SPECIALS" },
-      { name: "Loaded FriedRice (Fried Egg, Beef, Sausage, Chicken, Boiled Egg, Vegetables)", price: 100, category: "DE BLISS SPECIALS" },
-      { name: "Loaded Jollof (Fried Egg, Beef, Sausage, Chicken, Boiled Egg)", price: 100, category: "DE BLISS SPECIALS" },
+      {
+        name: "Banku/Akple with Okro (Beef, Salmon, Crab, Wele, Tilapia)",
+        price: 100,
+        category: "DE BLISS SPECIALS",
+      },
+      {
+        name: "Loaded FriedRice (Fried Egg, Beef, Sausage, Chicken, Boiled Egg, Vegetables)",
+        price: 100,
+        category: "DE BLISS SPECIALS",
+      },
+      {
+        name: "Loaded Jollof (Fried Egg, Beef, Sausage, Chicken, Boiled Egg)",
+        price: 100,
+        category: "DE BLISS SPECIALS",
+      },
       { name: "Superb Jollof", price: 85, category: "JOLLOF ZONE" },
       { name: "Beef Jollof", price: 90, category: "JOLLOF ZONE" },
       { name: "Beef Sauce With Jollof", price: 95, category: "JOLLOF ZONE" },
       { name: "Chicken Sauce With Jollof", price: 95, category: "JOLLOF ZONE" },
-      { name: "Jollof Rice With Grilled Chicken", price: 75, category: "JOLLOF ZONE" },
+      {
+        name: "Jollof Rice With Grilled Chicken",
+        price: 75,
+        category: "JOLLOF ZONE",
+      },
       { name: "Jollof With Fish", price: 75, category: "JOLLOF ZONE" },
-      { name: "Assorted Jollof With Fried Chicken", price: 90, category: "ASSORTED ZONE" },
-      { name: "Assorted Jollof With Grilled Chicken", price: 90, category: "ASSORTED ZONE" },
-      { name: "Assorted Fried Rice With Fried Chicken", price: 90, category: "ASSORTED ZONE" },
-      { name: "Assorted Fried Rice With Grilled Chicken", price: 90, category: "ASSORTED ZONE" },
+      {
+        name: "Assorted Jollof With Fried Chicken",
+        price: 90,
+        category: "ASSORTED ZONE",
+      },
+      {
+        name: "Assorted Jollof With Grilled Chicken",
+        price: 90,
+        category: "ASSORTED ZONE",
+      },
+      {
+        name: "Assorted Fried Rice With Fried Chicken",
+        price: 90,
+        category: "ASSORTED ZONE",
+      },
+      {
+        name: "Assorted Fried Rice With Grilled Chicken",
+        price: 90,
+        category: "ASSORTED ZONE",
+      },
       { name: "Assorted Noodles", price: 80, category: "ASSORTED ZONE" },
       { name: "Assorted Spaghetti", price: 80, category: "ASSORTED ZONE" },
-      { name: "Egg Fried Rice With Fried Chicken", price: 75, category: "FRIED RICE ZONE" },
-      { name: "Egg Fried Rice With Grilled Chicken", price: 75, category: "FRIED RICE ZONE" },
-      { name: "Egg Fried Rice With Chicken Sauce", price: 85, category: "FRIED RICE ZONE" },
-      { name: "Egg Fried Rice With Beef Sauce", price: 90, category: "FRIED RICE ZONE" },
-      { name: "Egg Fried Rice With Fish", price: 75, category: "FRIED RICE ZONE" },
+      {
+        name: "Egg Fried Rice With Fried Chicken",
+        price: 75,
+        category: "FRIED RICE ZONE",
+      },
+      {
+        name: "Egg Fried Rice With Grilled Chicken",
+        price: 75,
+        category: "FRIED RICE ZONE",
+      },
+      {
+        name: "Egg Fried Rice With Chicken Sauce",
+        price: 85,
+        category: "FRIED RICE ZONE",
+      },
+      {
+        name: "Egg Fried Rice With Beef Sauce",
+        price: 90,
+        category: "FRIED RICE ZONE",
+      },
+      {
+        name: "Egg Fried Rice With Fish",
+        price: 75,
+        category: "FRIED RICE ZONE",
+      },
       { name: "Vegetables Fried Rice", price: 60, category: "FRIED RICE ZONE" },
-      { name: "Plain Rice With Kontomire", price: 85, category: "PLAIN RICE ZONE" },
-      { name: "Plain Rice With Egg Stew", price: 85, category: "PLAIN RICE ZONE" },
-      { name: "Plain Rice With Vegetable", price: 85, category: "PLAIN RICE ZONE" },
-      { name: "Yam chips With Fried Chicken", price: 70, category: "FRIES ZONE" },
-      { name: "Yam Chips With Grilled Chicken", price: 70, category: "FRIES ZONE" },
-      { name: "French Fries With Fried Chicken", price: 80, category: "FRIES ZONE" },
-      { name: "French Fries With Grilled Chicken", price: 70, category: "FRIES ZONE" },
+      {
+        name: "Plain Rice With Kontomire",
+        price: 85,
+        category: "PLAIN RICE ZONE",
+      },
+      {
+        name: "Plain Rice With Egg Stew",
+        price: 85,
+        category: "PLAIN RICE ZONE",
+      },
+      {
+        name: "Plain Rice With Vegetable",
+        price: 85,
+        category: "PLAIN RICE ZONE",
+      },
+      {
+        name: "Yam chips With Fried Chicken",
+        price: 70,
+        category: "FRIES ZONE",
+      },
+      {
+        name: "Yam Chips With Grilled Chicken",
+        price: 70,
+        category: "FRIES ZONE",
+      },
+      {
+        name: "French Fries With Fried Chicken",
+        price: 80,
+        category: "FRIES ZONE",
+      },
+      {
+        name: "French Fries With Grilled Chicken",
+        price: 70,
+        category: "FRIES ZONE",
+      },
       { name: "Vegetable Shawarma", price: 70, category: "SHAWARMA ZONE" },
       { name: "Chicken Shawarma", price: 75, category: "SHAWARMA ZONE" },
       { name: "Beef Shawarma", price: 80, category: "SHAWARMA ZONE" },
@@ -212,9 +346,9 @@ app.get("/seed-menu", async (req, res) => {
     ];
 
     // Add default image if not present
-    const itemsWithImage = items.map(item => ({
+    const itemsWithImage = items.map((item) => ({
       ...item,
-      image: ""
+      image: "",
     }));
 
     // Insert only if not already present (by name)
@@ -246,12 +380,16 @@ app.post("/admin/update-price", async (req, res) => {
 app.post("/admin/create-user", async (req, res) => {
   const { name, password, role, phone } = req.body;
   if (!name || !password || !role) {
-    return res.status(400).json({ success: false, error: "All fields are required" });
+    return res
+      .status(400)
+      .json({ success: false, error: "All fields are required" });
   }
   try {
     const existing = await User.findOne({ name });
     if (existing) {
-      return res.status(409).json({ success: false, error: "User already exists" });
+      return res
+        .status(409)
+        .json({ success: false, error: "User already exists" });
     }
     const newUser = new User({ name, password, role, phone });
     await newUser.save();
@@ -346,8 +484,6 @@ app.post("/admin/order-status", async (req, res) => {
   }
 });
 
-
-
 app.get("/admin/rider-finished-deliveries", async (req, res) => {
   try {
     const deliveries = await RiderFinishedDelivery.find()
@@ -423,7 +559,9 @@ app.get("/rider/current-orders/:riderId", async (req, res) => {
 
 app.get("/rider/finished-orders/:riderId", async (req, res) => {
   try {
-    const deliveries = await RiderFinishedDelivery.find({ riderId: req.params.riderId })
+    const deliveries = await RiderFinishedDelivery.find({
+      riderId: req.params.riderId,
+    })
       .populate("userId", "name")
       .populate("items.menuItem");
     res.json(deliveries);
@@ -434,7 +572,9 @@ app.get("/rider/finished-orders/:riderId", async (req, res) => {
 
 app.delete("/admin/finished-orders/:orderId", async (req, res) => {
   try {
-    const deleted = await FinishedDelivery.findByIdAndDelete(req.params.orderId);
+    const deleted = await FinishedDelivery.findByIdAndDelete(
+      req.params.orderId
+    );
     if (!deleted) return res.status(404).json({ message: "Order not found" });
     res.json({ success: true });
   } catch (error) {
@@ -443,7 +583,6 @@ app.delete("/admin/finished-orders/:orderId", async (req, res) => {
   }
 });
 
-
 //Admin Updating and Editing Menu Item
 app.put("/admin/update-menu-item/:id", async (req, res) => {
   const { id } = req.params;
@@ -451,8 +590,11 @@ app.put("/admin/update-menu-item/:id", async (req, res) => {
   try {
     const updateFields = { name, price, category };
     if (imageBase64) updateFields.image = imageBase64;
-    const updated = await MenuItem.findByIdAndUpdate(id, updateFields, { new: true });
-    if (!updated) return res.status(404).json({ success: false, error: "Item not found" });
+    const updated = await MenuItem.findByIdAndUpdate(id, updateFields, {
+      new: true,
+    });
+    if (!updated)
+      return res.status(404).json({ success: false, error: "Item not found" });
     res.json({ success: true, item: updated });
   } catch (err) {
     console.error("Update error:", err);
@@ -460,11 +602,11 @@ app.put("/admin/update-menu-item/:id", async (req, res) => {
   }
 });
 
-
 app.delete("/admin/delete-menu-item/:id", async (req, res) => {
   try {
     const deleted = await MenuItem.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, error: "Item not found" });
+    if (!deleted)
+      return res.status(404).json({ success: false, error: "Item not found" });
     res.json({ success: true });
   } catch (err) {
     console.error("Delete error:", err);
@@ -505,7 +647,9 @@ app.post("/user/mark-finished", async (req, res) => {
 
     // Also create RiderFinishedDelivery if a rider is assigned
     if (order.riderId) {
-      const RiderFinishedDeliveryModel = mongoose.model("RiderFinishedDelivery");
+      const RiderFinishedDeliveryModel = mongoose.model(
+        "RiderFinishedDelivery"
+      );
       const riderFinished = new RiderFinishedDeliveryModel({
         userId: order.userId._id,
         riderId: order.riderId._id,

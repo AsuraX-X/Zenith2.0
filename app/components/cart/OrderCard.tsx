@@ -14,7 +14,7 @@ const OrderCard = ({
   quantity: number;
   id: string;
 }) => {
-  const { updateQuantity } = useCartContext();
+  const { updateQuantity, removeFromCart } = useCartContext();
 
   return (
     <div className="flex items-center justify-between gap-4 border-b border-b-gray-500 pb-4 pt-6 px-4 overflow-hidden">
@@ -51,9 +51,14 @@ const OrderCard = ({
             onChange={(e) => {
               updateQuantity(id, parseInt(e.target.value));
             }}
-            readOnly
           />
-          <button onClick={() => updateQuantity(id, quantity - 1)}>
+          <button
+            onClick={() =>
+              quantity > 1
+                ? updateQuantity(id, quantity - 1)
+                : removeFromCart(id)
+            }
+          >
             <BiMinus />
           </button>
         </div>

@@ -5,7 +5,7 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
 const DelivOrPickUp = () => {
   return (
     <div className="px-4">
-      <h1 className="text-2xl font-bold pt-6 pb-2">Delivery or PickUp?</h1>
+      <h1 className="text-xl font-bold pt-6 pb-2">Delivery or PickUp?</h1>
       <div className="flex items-center gap-2 mb-2">
         <label
           className="flex items-center w-full gap-2 cursor-pointer"

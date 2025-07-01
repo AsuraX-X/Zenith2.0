@@ -1,13 +1,13 @@
-import { BiChevronRight, BiPlusCircle } from "react-icons/bi";
-import food from "../../assets/Data/food.json";
+import { BiChevronRight, BiPlusCircle, BiTrash } from "react-icons/bi";
 import OrderCard from "./OrderCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
 import { useUser } from "../../Context/UserContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { cartItem } from "../general/General";
 import { useCartContext } from "../../Context/CartContext";
+import { motion } from "motion/react";
 
 const AllOrders = () => {
   const { user } = useUser();
@@ -20,7 +20,7 @@ const AllOrders = () => {
   const [locationError, setLocationError] = useState("");
   const [manualMode, setManualMode] = useState(false);
 
-  const { cart, clearCart } = useCartContext();
+  const { cart, clearCart, total } = useCartContext();
 
   const handleConfirmOrder = async () => {
     if (!user || !user.name) {
@@ -97,9 +97,16 @@ const AllOrders = () => {
 
   return (
     <div className="pt-20 px-40 min-h-screen">
-      <h1 className="text-3xl font-bold pb-2 mb-6 border-b border-b-[#ff2100]">
-        Cart
-      </h1>
+      <div className="pb-2 mb-6 border-b border-b-[#ff2100] flex justify-between">
+        <h1 className="text-3xl font-bold ">Cart</h1>
+        <motion.button
+          whileHover={{ backgroundColor: "#ff1200" }}
+          onClick={clearCart}
+          className="flex size-8 justify-center items-center rounded-full cursor-pointer"
+        >
+          <BiTrash size={20} />
+        </motion.button>
+      </div>
       {cart.length > 0 ? (
         <div>
           <section>
@@ -117,16 +124,16 @@ const AllOrders = () => {
               ))}
             </div>
             <NavLink to="/menu">
-              <div className="flex cursor-pointer items-center py-6 border-b border-b-gray-500 gap-2 px-4">
-                <BiPlusCircle size={30} color="#ff2100" />
-                <p className="text-xl">Add more</p>
+              <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
+                <BiPlusCircle size={25} color="#ff2100" />
+                <p>Add more</p>
               </div>
             </NavLink>
-            <div className="flex cursor-pointer items-center py-6 border-b border-b-gray-500 gap-2 px-4">
+            <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
               <input
                 type="text"
                 placeholder="Leave a comment..."
-                className=" placeholder:text-gray-500 text-xl"
+                className=" placeholder:text-gray-500"
               />
             </div>
           </section>
@@ -136,18 +143,17 @@ const AllOrders = () => {
           <section className="border-b border-b-gray-500">
             <div className="flex text-xl flex-col py-4 px-4 border-b border-b-gray-500 text-right">
               <p className="flex justify-between">
-                <span className="font-bold">Subtotal: </span>
-                <span>GH₵ 309.00</span>
+                <span>Subtotal: </span>
+                <span>GH₵{total.toFixed(2)}</span>
               </p>
               <p className="flex justify-between">
-                <span className="font-bold">Delivery: </span>{" "}
-                <span>GH₵ 30.00</span>
+                <span>Delivery: </span> <span>- -</span>
               </p>
             </div>
             <div className="px-4">
-              <p className="flex justify-between text-2xl py-2">
+              <p className="flex justify-between text-xl py-2">
                 <span className="font-bold text-[#ff1200]">Total: </span>{" "}
-                <span>GH₵ 30.00</span>
+                <span>GH₵{total}</span>
               </p>
             </div>
           </section>

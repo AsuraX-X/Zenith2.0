@@ -78,10 +78,10 @@ const FoodPopUp = ({
             <input
               type="number"
               className="w-8 h-8 text-center rounded flex items-center justify-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-0"
+              onChange={(e) => setQuantity(parseInt(e.target.value))}
               value={quantity}
-              readOnly
             />
-            <button onClick={() => setQuantity(quantity - 1)}>
+            <button onClick={() => quantity > 1 && setQuantity(quantity - 1)}>
               <BiMinus />
             </button>
           </div>
@@ -90,6 +90,7 @@ const FoodPopUp = ({
             className="flex w-full py-2 cursor-pointer bg-[#ff1200] justify-center items-center rounded-full"
             onClick={() => {
               addToCart(close, name, description, price, menuItemId, quantity);
+              removePopUp();
             }}
           >
             Add to cart

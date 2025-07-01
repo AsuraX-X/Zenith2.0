@@ -33,13 +33,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const { addPopUp } = usePopUpContext();
 
-  const [cart, setCart] = useState<cartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("cart");
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
+  const [cart, setCart] = useState<cartItem[]>([]);
+
+  useEffect(() => {
+    setCart(() => {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("cart");
+        return stored ? JSON.parse(stored) : [];
+      }
+      return [];
+    });
+  }, []);
 
   const addToCart = (
     close: () => void,
@@ -84,11 +88,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       cart.push(cartItem);
     }
 
-    // Save updated cart to localStorage
+    // Save updated cart to localStorage and update state
     localStorage.setItem("cart", JSON.stringify(cart));
-
-    // Show success message
-    alert(`${quantity} ${quantity === 1 ? "item" : "items"} added to cart!`);
+    setCart(cart);
 
     // Close the popup
     close();
