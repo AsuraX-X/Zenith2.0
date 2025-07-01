@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -44,13 +45,10 @@ const FinishedDelivery = mongoose.model(
 const RiderFinishedDelivery = require("./models/RiderFinishedDelivery");
 
 mongoose
-  .connect(
-    "mongodb+srv://samueldagbo50:Sammy%40mongo1@cluster0.k1dcltl.mongodb.net/food-delivery?retryWrites=true&w=majority&appName=Cluster0",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
