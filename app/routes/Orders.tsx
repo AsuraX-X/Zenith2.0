@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet";
 import Header1 from "../components/general/Header1";
-import AllOrders from "../components/orders/AllOrders";
+import AllOrders from "../components/cart/AllOrders";
 import Footer from "../components/general/Footer";
 
 const Orders = () => {

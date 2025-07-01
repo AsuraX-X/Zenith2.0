@@ -3,6 +3,8 @@ import { BrowserRouter } from "react-router";
 import App from "./App";
 import { PopUpProvider } from "./Context/PopUpContext";
 import { AuthProvider } from "./Context/AuthContext";
+import { UserProvider } from "./Context/UserContext";
+import { CartProvider } from "./Context/CartContext";
 
 const root = document.getElementById("root");
 
@@ -11,7 +13,11 @@ if (root) {
     <BrowserRouter>
       <PopUpProvider>
         <AuthProvider>
-          <App />
+          <UserProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </UserProvider>
         </AuthProvider>
       </PopUpProvider>
     </BrowserRouter>

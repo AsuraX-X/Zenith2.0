@@ -1,16 +1,20 @@
-import { useState } from "react";
 import { BiMinus, BiPlus } from "react-icons/bi";
+import { useCartContext } from "../../Context/CartContext";
 
 const OrderCard = ({
   name,
   description,
   price,
+  quantity,
+  id,
 }: {
   name: string;
   description: string;
   price: string;
+  quantity: number;
+  id: string;
 }) => {
-  const [count, setCount] = useState(2);
+  const { updateQuantity } = useCartContext();
 
   return (
     <div className="flex items-center justify-between gap-4 border-b border-b-gray-500 pb-4 pt-6 px-4 overflow-hidden">
@@ -36,16 +40,20 @@ const OrderCard = ({
       </div>
       <div>
         <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-full">
-          <button onClick={() => setCount(count + 1)}>
+          <button onClick={() => updateQuantity(id, quantity + 1)}>
             <BiPlus />
           </button>
           <input
             type="number"
+            min={1}
             className="w-8 h-8 text-center rounded flex items-center justify-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-0"
-            value={count}
+            value={quantity}
+            onChange={(e) => {
+              updateQuantity(id, parseInt(e.target.value));
+            }}
             readOnly
           />
-          <button onClick={() => setCount(count - 1)}>
+          <button onClick={() => updateQuantity(id, quantity - 1)}>
             <BiMinus />
           </button>
         </div>

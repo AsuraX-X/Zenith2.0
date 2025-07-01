@@ -1,22 +1,60 @@
 import { motion } from "motion/react";
 import { useAuthContext } from "../Context/AuthContext";
+import { useUser } from "../Context/UserContext";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { login } from "../services/api";
 
 const Login = () => {
   const { setAuth } = useAuthContext();
+  const { setUser } = useUser();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const res = await login(name, password);
+
+    if (res.success) {
+      const user = res.user;
+      setUser(user);
+
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "rider") {
+        navigate("/rider");
+      } else {
+        navigate("/menu");
+      }
+      setAuth("");
+    } else {
+      alert("Login failed. Please check your credentials.");
+    }
+  };
 
   return (
     <div className="w-full gap-8 flex flex-col items-center">
       <h1 className="text-4xl font-semibold">Login</h1>
-      <form action="" className="w-full flex flex-col items-center gap-4">
+      <form
+        onSubmit={handleLogin}
+        className="w-full flex flex-col items-center gap-4"
+      >
         <input
           type="text"
-          placeholder="Phone number"
+          placeholder="Username"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="py-2 px-4 w-3/4 bg-[#181b1e] border-2 border-[#ff2100] rounded-full"
         />
-        <button
-          type="submit"
-          className="bg-[#ff2100] px-4 py-2 rounded-full"
-        >
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="py-2 px-4 w-3/4 bg-[#181b1e] border-2 border-[#ff2100] rounded-full"
+        />
+        <button type="submit" className="bg-[#ff2100] px-4 py-2 rounded-full">
           Continue
         </button>
       </form>

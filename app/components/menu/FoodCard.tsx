@@ -8,10 +8,14 @@ const FoodCard = ({
   name,
   description,
   price,
+  id,
+  image,
 }: {
   name: string;
   description: string;
   price: string;
+  id: string;
+  image: string;
 }) => {
   const [isOrdering, setIsOrdering] = useState(false);
   const { addPopUp } = usePopUpContext();
@@ -35,13 +39,15 @@ const FoodCard = ({
               name={name}
               description={description}
               price={price}
+              image={image}
+              menuItemId={id}
             />
           </motion.div>
         )}
       </AnimatePresence>
       <div className="flex items-center gap-4">
         <div className="min-h-35 min-w-35 bg-gray-600">
-          <img src="" alt="" />
+          <img src={image} alt={name} />
         </div>
         <div>
           <p className="">{name}</p>

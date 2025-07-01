@@ -5,11 +5,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { PUCI } from "../components/general/General";
 
-interface PUCI {
-  addPopUp: () => void;
-  removePopUp: () => void;
-}
+
 
 const PopUpContext = createContext<PUCI | undefined>(undefined);
 
@@ -39,6 +37,7 @@ export const PopUpProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePopUpContext = () => {
   const context = useContext(PopUpContext);
   if (!context) throw new Error("Context not provided");

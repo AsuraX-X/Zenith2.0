@@ -2,8 +2,8 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { BiMinus, BiPlus } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
-import { useAuthContext } from "../../Context/AuthContext";
 import { usePopUpContext } from "../../Context/PopUpContext";
+import { useCartContext } from "../../Context/CartContext";
 
 const FoodPopUp = ({
   close,
@@ -11,18 +11,22 @@ const FoodPopUp = ({
   name,
   description,
   price,
+  image,
+  menuItemId,
 }: {
   close: () => void;
   isOrdering: boolean;
   name: string;
   description: string;
   price: string;
+  image: string;
+  menuItemId: string;
 }) => {
-  const [count, setCount] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
-  const { setAuth } = useAuthContext();
+  const { removePopUp } = usePopUpContext();
 
-  const { removePopUp, addPopUp } = usePopUpContext();
+  const { addToCart } = useCartContext();
 
   return (
     <motion.div
@@ -44,7 +48,9 @@ const FoodPopUp = ({
       >
         <IoClose size={20} color="#ff1200" />
       </button>
-      <div className="h-1/2 bg-gray-400"></div>
+      <div className="h-1/2 bg-gray-400">
+        <img src={image} alt={name} />
+      </div>
       <div className="flex flex-col justify-between h-1/2">
         <div className="px-4 py-4">
           <p>{name}</p>
@@ -66,16 +72,16 @@ const FoodPopUp = ({
         </div>
         <div className="px-4 py-6 flex items-center justify-center gap-4">
           <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-full">
-            <button onClick={() => setCount(count + 1)}>
+            <button onClick={() => setQuantity(quantity + 1)}>
               <BiPlus />
             </button>
             <input
               type="number"
               className="w-8 h-8 text-center rounded flex items-center justify-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-0"
-              value={count}
+              value={quantity}
               readOnly
             />
-            <button onClick={() => setCount(count - 1)}>
+            <button onClick={() => setQuantity(quantity - 1)}>
               <BiMinus />
             </button>
           </div>
@@ -83,11 +89,10 @@ const FoodPopUp = ({
             whileHover={{ scale: 1.02 }}
             className="flex w-full py-2 cursor-pointer bg-[#ff1200] justify-center items-center rounded-full"
             onClick={() => {
-              setAuth("login");
-              addPopUp();
+              addToCart(close, name, description, price, menuItemId, quantity);
             }}
           >
-            Place Order
+            Add to cart
           </motion.button>
         </div>
       </div>
