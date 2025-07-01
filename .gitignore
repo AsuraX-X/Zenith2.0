@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 app/backend/.env
+
+.cache_ggshield

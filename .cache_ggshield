@@ -1,1 +1,1 @@
-{"last_found_secrets": [{"match": "8a6e67dbd383fca35f13bd40403a231ecc2ebeee4c8f8dfcc5c2392702e41b5e", "name": "MongoDB URI - commit://96ac09b57335f8ba1b6f833887253befdcd797f6/app/backend/index.js"}]}
+{"last_found_secrets": [{"name": "MongoDB URI - commit://96ac09b57335f8ba1b6f833887253befdcd797f6/app/backend/index.js", "match": "8a6e67dbd383fca35f13bd40403a231ecc2ebeee4c8f8dfcc5c2392702e41b5e"}]}
