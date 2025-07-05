@@ -1,26 +1,38 @@
-import { BiChevronRight, BiPlusCircle, BiTrash } from "react-icons/bi";
+import { BiPhone, BiPlusCircle, BiTrash } from "react-icons/bi";
 import OrderCard from "./OrderCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
 import { useUser } from "../../Context/UserContext";
-import { useState } from "react";
-import type { cartItem } from "../general/General";
+import { useState, useRef, type ChangeEvent } from "react";
+import { type cartItem } from "../general/General";
 import { useCartContext } from "../../Context/CartContext";
 import { motion } from "motion/react";
+import { useLocationContext } from "../../Context/LocationContext";
 
 const AllOrders = () => {
   const { user } = useUser();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const [contact, setContact] = useState("");
-  const [address, setAddress] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
-  const [manualMode, setManualMode] = useState(false);
+  const [contact, setContact] = useState(user?.phone);
 
   const { cart, clearCart, total } = useCartContext();
+
+  const { findLocation, location, setLocation, autoComplete, addresses } =
+    useLocationContext();
+
+  const handler = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchPossibleLocation = (e: ChangeEvent<HTMLInputElement>) => {
+    if (handler.current) {
+      clearTimeout(handler.current);
+    }
+
+    handler.current = setTimeout(() => {
+      autoComplete(e.target.value);
+    }, 1000);
+  };
 
   const handleConfirmOrder = async () => {
     if (!user || !user.name) {
@@ -28,7 +40,7 @@ const AllOrders = () => {
       return;
     }
 
-    if (!contact || !address) {
+    if (!contact || !location) {
       alert("Please provide contact and address.");
       return;
     }
@@ -44,7 +56,7 @@ const AllOrders = () => {
           quantity: item.quantity,
         })),
         contact,
-        address,
+        location,
       }),
     });
 
@@ -56,43 +68,6 @@ const AllOrders = () => {
     } else {
       alert("Order failed");
     }
-  };
-
-  const fetchCurrentLocation = () => {
-    setLocationLoading(true);
-    setLocationError("");
-    setManualMode(false);
-
-    if (!("geolocation" in navigator)) {
-      setLocationLoading(false);
-      setLocationError("Geolocation not supported by your browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        setAddress(mapsLink);
-        setLocationLoading(false);
-      },
-      (error) => {
-        console.error("Location error:", error);
-        setLocationError("Failed to get current location.");
-        setLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
-
-  const handleManualAddress = () => {
-    setManualMode(true);
-    setAddress("");
-    setLocationError("");
   };
 
   return (
@@ -108,70 +83,137 @@ const AllOrders = () => {
         </motion.button>
       </div>
       {cart.length > 0 ? (
-        <div>
-          <section>
-            <div className="flex flex-col gap-4">
-              {cart.map((item: cartItem) => (
-                <div key={item.menuItem._id}>
-                  <OrderCard
-                    id={item.menuItem._id}
-                    description={item.menuItem.description}
-                    name={item.menuItem.name}
-                    price={item.menuItem.price.toFixed(2)}
-                    quantity={item.quantity}
+        <div className="grid grid-cols-2 divide-x divide-gray-300">
+          <div className="pr-12">
+            <section>
+              <div className="flex flex-col gap-4">
+                {cart.map((item: cartItem) => (
+                  <div key={item.menuItem._id}>
+                    <OrderCard
+                      id={item.menuItem._id}
+                      description={item.menuItem.description}
+                      name={item.menuItem.name}
+                      price={item.menuItem.price.toFixed(2)}
+                      quantity={item.quantity}
+                    />
+                  </div>
+                ))}
+              </div>
+              <NavLink to="/menu">
+                <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
+                  <BiPlusCircle size={25} color="#ff2100" />
+                  <p>Add more</p>
+                </div>
+              </NavLink>
+              <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
+                <input
+                  type="text"
+                  placeholder="Leave a comment..."
+                  className=" placeholder:text-gray-500"
+                />
+              </div>
+            </section>
+          </div>
+          <div className="pl-12">
+            <section className="pb-4  border-b border-b-gray-500">
+              <DelivOrPickUp />
+            </section>
+            <section className="border-b border-b-gray-500">
+              <div className="flex text-xl flex-col py-4 px-4 border-b border-b-gray-500 text-right">
+                <p className="flex justify-between">
+                  <span>Subtotal: </span>
+                  <span>GH₵{total.toFixed(2)}</span>
+                </p>
+                <p className="flex justify-between">
+                  <span>Delivery: </span> <span>- -</span>
+                </p>
+              </div>
+              <div className="px-4">
+                <p className="flex justify-between text-xl py-2">
+                  <span className="font-bold text-[#ff1200]">Total: </span>{" "}
+                  <span>GH₵{total}</span>
+                </p>
+              </div>
+            </section>
+            <section>
+              <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500">
+                <div className="flex items-center gap-2 relative">
+                  <LuMapPin size={20} />
+                  <input
+                    type="text"
+                    name="location"
+                    id="location"
+                    value={location}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      fetchPossibleLocation(e);
+                      setIsOpen(true);
+                    }}
+                    placeholder="Enter your location"
+                    className="focus:outline-none py-2 w-120"
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{
+                      opacity: isOpen ? 1 : 0,
+                      height: isOpen ? "auto" : 0,
+                    }}
+                    className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4"
+                  >
+                    <div className="divide-y divide-gray-500">
+                      {addresses.map(({ suburb, street }, i) => (
+                        <p
+                          key={i}
+                          onClick={() => {
+                            setLocation(`${suburb}, ${street}`);
+                            setIsOpen(false);
+                          }}
+                          className="py-2 cursor-pointer"
+                        >
+                          {suburb}, {street}
+                        </p>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+                <div>
+                  <button
+                    onClick={findLocation}
+                    className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-full cursor-pointer"
+                  >
+                    Use my location
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col px-4 py-2 border-b border-b-gray-500">
+                <div className="flex items-center gap-2">
+                  <BiPhone size={20} />
+                  <input
+                    type="text"
+                    name="contact"
+                    id="contact"
+                    placeholder="Phone"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    className="mb-1 focus:outline-0"
                   />
                 </div>
-              ))}
-            </div>
-            <NavLink to="/menu">
-              <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
-                <BiPlusCircle size={25} color="#ff2100" />
-                <p>Add more</p>
+                {contact && !/^(0\d{9}|(\+233\d{9}))$/.test(contact) && (
+                  <span className="text-red-500 text-sm">
+                    Please enter a valid Ghanaian phone number.
+                  </span>
+                )}
               </div>
-            </NavLink>
-            <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
-              <input
-                type="text"
-                placeholder="Leave a comment..."
-                className=" placeholder:text-gray-500"
-              />
-            </div>
-          </section>
-          <section className="pb-4  border-b border-b-gray-500">
-            <DelivOrPickUp />
-          </section>
-          <section className="border-b border-b-gray-500">
-            <div className="flex text-xl flex-col py-4 px-4 border-b border-b-gray-500 text-right">
-              <p className="flex justify-between">
-                <span>Subtotal: </span>
-                <span>GH₵{total.toFixed(2)}</span>
-              </p>
-              <p className="flex justify-between">
-                <span>Delivery: </span> <span>- -</span>
-              </p>
-            </div>
-            <div className="px-4">
-              <p className="flex justify-between text-xl py-2">
-                <span className="font-bold text-[#ff1200]">Total: </span>{" "}
-                <span>GH₵{total}</span>
-              </p>
-            </div>
-          </section>
-          <section>
-            <div className="flex justify-between items-center px-4 py-2 cursor-pointer border-b border-b-gray-500">
-              <div className="flex items-center text-xl gap-2">
-                <LuMapPin /> Location
+              <div className="px-4 py-4">
+                <button
+                  onClick={handleConfirmOrder}
+                  className="bg-[#ff1200] w-full rounded-full py-2 text-2xl font-bold"
+                >
+                  Place Order
+                </button>
               </div>
-              <div>
-                <BiChevronRight size={40} color="#6a7282" />
-              </div>
-            </div>
-            <div className="px-4 py-4">
-              <button className="bg-[#ff1200] w-full rounded-full py-2 text-2xl font-bold">
-                Place Order
-              </button>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       ) : (
         <div className="py-12 h-[75vh] flex items-center justify-center flex-col ">

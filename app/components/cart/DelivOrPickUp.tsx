@@ -1,10 +1,28 @@
+import { useState } from "react";
 import { FaWalking } from "react-icons/fa";
 import { MdOutlineDeliveryDining } from "react-icons/md";
 import { RiCalendarScheduleLine } from "react-icons/ri";
+import SchedulePopUp from "./SchedulePopUp";
+import { usePopUpContext } from "../../Context/PopUpContext";
+import { useScheduleContext } from "../../Context/ScheduleContext";
 
 const DelivOrPickUp = () => {
+  const [deliveryMethod, setDeliveryMethod] = useState<string>("");
+  const [isOpen, setIsOpen] = useState(false);
+  const { addPopUp, removePopUp } = usePopUpContext();
+  const { schedule } = useScheduleContext();
   return (
     <div className="px-4">
+      {isOpen && (
+        <div className="fixed bg-black/25 top-0 left-0 right-0 h-screen flex justify-center items-center">
+          <SchedulePopUp
+            action={() => {
+              setIsOpen(false);
+              removePopUp();
+            }}
+          />
+        </div>
+      )}
       <h1 className="text-xl font-bold pt-6 pb-2">Delivery or PickUp?</h1>
       <div className="flex items-center gap-2 mb-2">
         <label
@@ -24,6 +42,8 @@ const DelivOrPickUp = () => {
           type="radio"
           name="deliveryMethod"
           id="delivery"
+          checked={deliveryMethod === "delivery"}
+          onChange={() => setDeliveryMethod("delivery")}
         />
       </div>
       <div className="flex items-center gap-2 mb-2">
@@ -44,6 +64,8 @@ const DelivOrPickUp = () => {
           type="radio"
           name="deliveryMethod"
           id="pickUp"
+          checked={deliveryMethod === "pickUp"}
+          onChange={() => setDeliveryMethod("pickUp")}
         />
       </div>
       <div className="flex items-center gap-2">
@@ -56,14 +78,21 @@ const DelivOrPickUp = () => {
           </div>
           <div>
             <p>Schedule</p>
-            <p className="text-base text-gray-500">Select a time</p>
+            <p className="text-base text-gray-500">
+              {schedule || "Select a time"}
+            </p>
           </div>
         </label>
         <input
           className=" appearance-none w-6 h-6 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-7 rounded-full border-3 cursor-pointer "
-          type="radio"
+          type="checkbox"
           name="schedule"
           id="schedule"
+          checked={schedule !== ""}
+          onChange={() => {
+            setIsOpen(true);
+            addPopUp();
+          }}
         />
       </div>
     </div>

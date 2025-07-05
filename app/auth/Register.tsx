@@ -4,9 +4,11 @@ import { useUser } from "../Context/UserContext";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { signup } from "../services/api";
+import { usePopUpContext } from "../Context/PopUpContext";
 
 const Register = () => {
   const { setAuth } = useAuthContext();
+  const { removePopUp } = usePopUpContext();
   const { setUser } = useUser(); // ✅ Use context
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,6 +34,7 @@ const Register = () => {
       }
 
       setAuth("");
+      removePopUp();
     } else {
       alert("Signup failed. Please try again.");
     }
@@ -41,7 +44,22 @@ const Register = () => {
     <div className="w-full gap-8 flex flex-col items-center">
       <h1 className="text-4xl font-semibold">Sign Up</h1>
       <form
-        onSubmit={handleSignup}
+        onSubmit={(e) => {
+          e.preventDefault();
+          // Ghanaian phone number validation: starts with 0, followed by 9 digits, or +233 then 9 digits
+          const ghanaPhoneRegex = /^(0\d{9}|(\+233\d{9}))$/;
+          if (!ghanaPhoneRegex.test(phone)) {
+            alert("Please enter a valid Ghanaian phone number.");
+            return;
+          }
+          // Email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            alert("Please enter a valid email address.");
+            return;
+          }
+          handleSignup(e);
+        }}
         className="w-full flex flex-col items-center gap-4"
       >
         <input
@@ -58,6 +76,11 @@ const Register = () => {
           placeholder="Email"
           className="py-2 px-4 w-3/4 bg-[#181b1e] border-2 border-[#ff2100] rounded-full"
         />
+        {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+          <span className="text-red-500 text-sm w-full px-20">
+            *Please enter a valid email.
+          </span>
+        )}
         <input
           type="text"
           value={phone}
@@ -65,6 +88,11 @@ const Register = () => {
           placeholder="Phone number"
           className="py-2 px-4 w-3/4 bg-[#181b1e] border-2 border-[#ff2100] rounded-full"
         />
+        {phone && !/^(0\d{9}|(\+233\d{9}))$/.test(phone) && (
+          <span className="text-red-500 text-sm w-full px-20">
+            *Please enter a valid phone number.
+          </span>
+        )}
         <input
           type="password"
           value={password}

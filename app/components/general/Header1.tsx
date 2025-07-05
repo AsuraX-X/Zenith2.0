@@ -4,7 +4,7 @@ import { usePopUpContext } from "../../Context/PopUpContext";
 import { useUser } from "../../Context/UserContext";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { BiChevronDown } from "react-icons/bi";
+import { BiChevronDown, BiUserCircle } from "react-icons/bi";
 
 const routes = [
   { name: "HOME", path: "/" },
@@ -55,13 +55,13 @@ const Header1 = () => {
       </div>
       <div className="flex justify-end flex-1">
         {user ? (
-          <div className="flex relative">
+          <div className="flex relative min-w-70 justify-end">
             <button
               ref={buttonRef}
               className="flex items-center cursor-pointer"
               onClick={() => setIsOpen((prev) => !prev)}
             >
-              <p>{user.name}</p>
+              <BiUserCircle size={30} />
               <BiChevronDown size={20} />
             </button>
             <motion.div
@@ -73,7 +73,8 @@ const Header1 = () => {
               className="absolute w-full overflow-hidden top-[100%] mt-4"
               ref={popupRef}
             >
-              <div className="px-4 py-2 rounded-lg bg-[#242729] w-full">
+              <div className="px-4 py-2 rounded-lg bg-[#242729] divide-y gap-2">
+                <p>{user.name}</p>
                 <button
                   onClick={() => {
                     setUser(null);
