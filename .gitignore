@@ -23,5 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-app/backend/.env
-.env
+app/backend/.env.keys
+.env.keys

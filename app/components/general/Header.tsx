@@ -5,6 +5,8 @@ import { useUser } from "../../Context/UserContext";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BiChevronDown, BiUserCircle } from "react-icons/bi";
+import { useCartContext } from "../../Context/CartContext";
+import { FiShoppingCart } from "react-icons/fi";
 
 const routes = [
   { name: "HOME", path: "/" },
@@ -13,11 +15,12 @@ const routes = [
   { name: "ORDERS", path: "/orders" },
 ];
 
-const Header1 = () => {
+const Header = () => {
   const { setAuth } = useAuthContext();
   const location = useLocation();
   const { addPopUp } = usePopUpContext();
   const { user, setUser } = useUser();
+  const { cart } = useCartContext();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const popupRef = useRef<HTMLDivElement>(null);
@@ -42,7 +45,7 @@ const Header1 = () => {
   }, [isOpen]);
 
   return (
-    <header className="z-10 flex absolute top-0 w-full items-center py-2 bg-gradient-to-b from-black to-transparent px-6">
+    <header className="z-10 flex fixed top-0 w-full items-center py-2 bg-gradient-to-b from-black to-transparent px-6">
       <div className="flex justify-start flex-1">Logo</div>
       <div className="gap-4 flex justify-center flex-1">
         {routes
@@ -55,7 +58,19 @@ const Header1 = () => {
       </div>
       <div className="flex justify-end flex-1">
         {user ? (
-          <div className="flex relative min-w-70 justify-end">
+          <div className="flex relative min-w-70 justify-end gap-2">
+            {cart.length > 0 && location.pathname !== "/cart" && (
+              <div className="relative">
+                <div className="bg-[#ff1200] rounded-full absolute size-4 flex justify-center items-center right-0">
+                  <p className="text-xs">{cart.length}</p>
+                </div>
+                <NavLink to="/cart">
+                  <button className="cursor-pointer flex items-center py-2 px-4 border border-[#ff1200] rounded-full gap-2 bg-[#0e1113]">
+                    <FiShoppingCart /> Cart
+                  </button>
+                </NavLink>
+              </div>
+            )}
             <button
               ref={buttonRef}
               className="flex items-center cursor-pointer"
@@ -113,4 +128,4 @@ const Header1 = () => {
   );
 };
 
-export default Header1;
+export default Header;

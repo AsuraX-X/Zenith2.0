@@ -1,41 +1,29 @@
 import { Helmet } from "react-helmet";
 import Auth from "../auth/Auth";
 import Footer from "../components/general/Footer";
-import Header1 from "../components/general/Header1";
+import Header from "../components/general/Header";
 import About from "../components/home/About";
 import HeroSection from "../components/home/HeroSection";
 import ShortMenu from "../components/home/ShortMenu";
+import { useEffect, useState } from "react";
+import type { MenuItem } from "../components/general/General";
 
 export default function Home() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
-  } else {
-    console.log("Geolocation is not supported by this browser.");
-  }
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
-  function successCallback(position: GeolocationPosition) {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-    // Proceed to reverse geocoding
-  }
+  useEffect(() => {
+    const getItems = async () => {
+      const res = await fetch("http://localhost:3000/menu");
+      const data: MenuItem[] = await res.json();
+      setMenuItems(data);
+    };
 
-  function errorCallback(error: GeolocationPositionError) {
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        console.error("User denied the request for Geolocation.");
-        break;
-      case error.POSITION_UNAVAILABLE:
-        console.error("Location information is unavailable.");
-        break;
-      case error.TIMEOUT:
-        console.error("The request to get user location timed out.");
-        break;
-      default:
-        console.error("An unknown error occurred.");
-        break;
-    }
-  }
+    getItems();
+  }, []);
+
+  useEffect(() => {
+    console.log(menuItems);
+  }, [menuItems]);
 
   return (
     <div>
@@ -44,7 +32,7 @@ export default function Home() {
         <meta name="home" content="Welcome to De Bliss!" />
       </Helmet>
       <Auth />
-      <Header1 />
+      <Header />
       <HeroSection />
       <ShortMenu />
       <About />

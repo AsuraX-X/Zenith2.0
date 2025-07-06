@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "node app/backend/index.js",
+    "dev": "dotenvx run -- vite",
+    "start:backend": "pnpm --filter ./app/backend start",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

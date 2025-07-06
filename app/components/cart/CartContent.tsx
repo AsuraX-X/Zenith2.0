@@ -1,5 +1,5 @@
 import { BiPhone, BiPlusCircle, BiTrash } from "react-icons/bi";
-import OrderCard from "./OrderCard";
+import CartCard from "./CartCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
@@ -10,7 +10,7 @@ import { useCartContext } from "../../Context/CartContext";
 import { motion } from "motion/react";
 import { useLocationContext } from "../../Context/LocationContext";
 
-const AllOrders = () => {
+const CartContent = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -83,13 +83,13 @@ const AllOrders = () => {
         </motion.button>
       </div>
       {cart.length > 0 ? (
-        <div className="grid grid-cols-2 divide-x divide-gray-300">
+        <div className="grid grid-cols-2 divide-x divide-gray-300 min-h-screen">
           <div className="pr-12">
             <section>
               <div className="flex flex-col gap-4">
                 {cart.map((item: cartItem) => (
                   <div key={item.menuItem._id}>
-                    <OrderCard
+                    <CartCard
                       id={item.menuItem._id}
                       description={item.menuItem.description}
                       name={item.menuItem.name}
@@ -114,7 +114,7 @@ const AllOrders = () => {
               </div>
             </section>
           </div>
-          <div className="pl-12">
+          <div className="pl-12 sticky h-fit top-10 z-10">
             <section className="pb-4  border-b border-b-gray-500">
               <DelivOrPickUp />
             </section>
@@ -136,8 +136,8 @@ const AllOrders = () => {
               </div>
             </section>
             <section>
-              <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500">
-                <div className="flex items-center gap-2 relative">
+              <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500 gap-4">
+                <div className="flex items-center gap-2 relative w-full">
                   <LuMapPin size={20} />
                   <input
                     type="text"
@@ -150,7 +150,7 @@ const AllOrders = () => {
                       setIsOpen(true);
                     }}
                     placeholder="Enter your location"
-                    className="focus:outline-none py-2 w-120"
+                    className="focus:outline-none py-2 w-full overflow-hidden overflow-ellipsis"
                   />
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -158,7 +158,7 @@ const AllOrders = () => {
                       opacity: isOpen ? 1 : 0,
                       height: isOpen ? "auto" : 0,
                     }}
-                    className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4"
+                    className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4 overflow-hidden"
                   >
                     <div className="divide-y divide-gray-500">
                       {addresses.map(({ suburb, street }, i) => (
@@ -176,7 +176,7 @@ const AllOrders = () => {
                     </div>
                   </motion.div>
                 </div>
-                <div>
+                <div className="flex shrink-0">
                   <button
                     onClick={findLocation}
                     className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-full cursor-pointer"
@@ -204,7 +204,7 @@ const AllOrders = () => {
                   </span>
                 )}
               </div>
-              <div className="px-4 py-4">
+              <div className="px-4 pt-4">
                 <button
                   onClick={handleConfirmOrder}
                   className="bg-[#ff1200] w-full rounded-full py-2 text-2xl font-bold"
@@ -229,4 +229,4 @@ const AllOrders = () => {
   );
 };
 
-export default AllOrders;
+export default CartContent;

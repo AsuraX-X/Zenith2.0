@@ -33,17 +33,21 @@ const FullMenu = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/menu")
-      .then((res) => res.json())
-      .then((data: MenuItem[]) => {
+    const fetchMenu = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/menu");
+        const data: MenuItem[] = await res.json();
         setMenuItems(data);
         const uniqueTypes = Array.from(
           new Set(data.map((item: MenuItem) => item.category))
         );
         setCategories(uniqueTypes);
         setUniqueCategories(uniqueTypes);
-      })
-      .catch((err) => console.error("Failed to load menu", err));
+      } catch (err) {
+        console.error("Failed to load menu", err);
+      }
+    };
+    fetchMenu();
   }, []);
 
   const addFilter = (fil: string) => {

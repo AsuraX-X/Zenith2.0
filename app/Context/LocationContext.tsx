@@ -42,29 +42,37 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const reverseGeocode = async (lat: number, long: number) => {
-    const res = await fetch(
-      `https://us1.locationiq.com/v1/reverse?key=${key}&lat=${lat}&lon=${long}&format=json&`
-    );
-    const data = await res.json();
+    try {
+      const res = await fetch(
+        `https://us1.locationiq.com/v1/reverse?key=${key}&lat=${lat}&lon=${long}&format=json&`
+      );
+      const data = await res.json();
 
-    setLocation(`${data.address.suburb}, ${data.address.road}`);
+      setLocation(`${data.address.suburb}, ${data.address.road}`);
 
-    return data;
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const autoComplete = async (location: string) => {
-    const res = await fetch(
-      `https://api.locationiq.com/v1/autocomplete?key=${key}&q=${location}&limit=5&dedupe=1&`
-    );
+    try {
+      const res = await fetch(
+        `https://api.locationiq.com/v1/autocomplete?key=${key}&q=${location}&limit=5&dedupe=1&`
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setAddresses(
-      data.map((item: { address: { suburb: string; name: string } }) => ({
-        suburb: item.address.suburb,
-        street: item.address.name,
-      }))
-    );
+      setAddresses(
+        data.map((item: { address: { suburb: string; name: string } }) => ({
+          suburb: item.address.suburb,
+          street: item.address.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {

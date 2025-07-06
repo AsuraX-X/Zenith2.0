@@ -1,7 +1,7 @@
 import { BiMinus, BiPlus } from "react-icons/bi";
 import { useCartContext } from "../../Context/CartContext";
 
-const OrderCard = ({
+const CartCard = ({
   name,
   description,
   price,
@@ -67,4 +67,4 @@ const OrderCard = ({
   );
 };
 
-export default OrderCard;
+export default CartCard;
