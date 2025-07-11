@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { cartItem } from "../components/general/General";
+import type { cartItem } from "../Interfaces/Interfaces";
 import { useAuthContext } from "./AuthContext";
 import { useUser } from "./UserContext";
 import { usePopUpContext } from "./PopUpContext";
@@ -82,7 +82,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     if (existingItemIndex !== -1) {
       // Update quantity if item exists
-      cart[existingItemIndex].quantity += quantity;
+      cart[existingItemIndex].quantity = quantity;
     } else {
       // Add new item if it doesn't exist
       cart.push(cartItem);

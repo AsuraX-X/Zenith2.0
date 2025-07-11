@@ -27,7 +27,7 @@ const Auth = () => {
             transition: { delay: 0.2 },
           }
         }
-        className="flex justify-center items-center relative bg-[#0e1113] sm:size-125 h-100 w-80 rounded-md"
+        className="flex justify-center items-center relative bg-[#0e1113] sm:size-125 h-100 w-80 rounded-lg"
       >
         <button
           className="absolute top-4 right-4 cursor-pointer"

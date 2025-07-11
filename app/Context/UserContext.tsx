@@ -5,7 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import type { User, UserContextType } from "../components/general/General";
+import type { User, UserContextType } from "../Interfaces/Interfaces";
 
 const UserContext = createContext<UserContextType | null>(null);
 
@@ -29,17 +29,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const setUserWithStorage = (userData: User | null) => {
+  const setUserWithStorage = (userData: (User & { token?: string }) | null) => {
     if (userData) {
-      // Ensure we have both _id and id for compatibility
       const userToStore = {
         ...userData,
         id: userData._id || userData.id,
       };
       localStorage.setItem("user", JSON.stringify(userToStore));
+      if (userData.token) {
+        localStorage.setItem("token", userData.token);
+      }
       setUser(userToStore);
     } else {
       localStorage.removeItem("user");
+      localStorage.removeItem("token");
       setUser(null);
     }
   };

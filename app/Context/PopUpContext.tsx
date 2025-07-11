@@ -5,9 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { PUCI } from "../components/general/General";
-
-
+import type { PUCI } from "../Interfaces/Interfaces";
 
 const PopUpContext = createContext<PUCI | undefined>(undefined);
 

@@ -149,7 +149,7 @@ const SchedulePopUp = ({ action }: { action: () => void }) => {
           onClick={() => {
             action();
           }}
-          className="bg-[#0e1113] border border-[#ff1200] py-2 px-4 rounded-full cursor-pointer"
+          className="bg-[#0e1113] border border-[#ff1200] py-2 px-4 rounded-lg cursor-pointer"
         >
           Continue
         </button>

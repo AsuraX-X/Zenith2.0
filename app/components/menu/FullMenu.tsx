@@ -3,7 +3,7 @@ import FoodCard from "./FoodCard";
 import { BiFilter } from "react-icons/bi";
 import { motion } from "motion/react";
 import { BsDot } from "react-icons/bs";
-import type { MenuItem } from "../general/General";
+import type { MenuItem } from "../../Interfaces/Interfaces";
 
 const FullMenu = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -115,7 +115,7 @@ const FullMenu = () => {
               <h1 className="text-xl font-bold border-b-2 border-b-[#ff2100] pb-2 mb-8">
                 {category.toUpperCase()}
               </h1>
-              <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="grid  grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
                 {menuItems
                   .filter((item: MenuItem) => item.category === category)
                   .map(({ _id, name, description, price, image }: MenuItem) => (
@@ -138,9 +138,9 @@ const FullMenu = () => {
                 animate={{ y: [0, 20, 0] }}
                 transition={{
                   repeat: Infinity,
-                  delay: i/4,
+                  delay: i / 4,
                 }}
-                className="size-8 rounded-full bg-[#ff1200]"
+                className="size-7 rounded-full bg-[#ff1200]"
                 key={i}
               />
             ))}

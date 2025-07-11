@@ -1,4 +1,4 @@
-import { BiMinus, BiPlus } from "react-icons/bi";
+import { BiMinus, BiPlus, BiTrash } from "react-icons/bi";
 import { useCartContext } from "../../Context/CartContext";
 
 const CartCard = ({
@@ -17,11 +17,8 @@ const CartCard = ({
   const { updateQuantity, removeFromCart } = useCartContext();
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-b-gray-500 pb-4 pt-6 px-4 overflow-hidden">
-      <div className="flex items-center gap-4">
-        <div className="min-h-35 min-w-35 bg-gray-600 rounded-l-lg">
-          <img src="" alt="" />
-        </div>
+    <div className="bg-[#181c1f] flex items-center justify-between gap-4 rounded-lg p-3 sm:p-4 border border-gray-600">
+      <div className="flex items-center gap-4 ">
         <div>
           <p className="">{name}</p>
           <p
@@ -35,11 +32,11 @@ const CartCard = ({
           >
             {description}
           </p>
-          <p>Price: GH₵{price}</p>
+          <p className="text-[0.825rem]">Price: GH₵{price}</p>
         </div>
       </div>
-      <div>
-        <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-full">
+      <div className="flex items-center gap-2">
+        <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-lg">
           <button onClick={() => updateQuantity(id, quantity + 1)}>
             <BiPlus />
           </button>
@@ -48,9 +45,7 @@ const CartCard = ({
             min={1}
             className="w-8 h-8 text-center rounded flex items-center justify-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-0"
             value={quantity}
-            onChange={(e) => {
-              updateQuantity(id, parseInt(e.target.value));
-            }}
+            readOnly
           />
           <button
             onClick={() =>
@@ -62,6 +57,9 @@ const CartCard = ({
             <BiMinus />
           </button>
         </div>
+        <button onClick={() => removeFromCart(id)} className=" cursor-pointer">
+          <BiTrash />
+        </button>
       </div>
     </div>
   );

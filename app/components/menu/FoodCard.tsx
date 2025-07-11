@@ -45,38 +45,27 @@ const FoodCard = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="flex items-center gap-4">
-        <div className="min-h-35 min-w-35 bg-gray-600">
-          <img src={image} alt={name} />
-        </div>
+      <div className="size-40 shrink-0 bg-gray-600">
+        <img src={image} alt={name} />
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 w-full justify-center sm:justify-between sm:items-center">
         <div>
           <p className="">{name}</p>
-          <p
-            className="text-gray-400 overflow-hidden"
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex text-[#e87171] text-nowrap">
+            <p>GH₵{price}</p>
+          </div>
+          <button
+            onClick={() => {
+              setIsOrdering(true);
+              addPopUp();
             }}
+            className="bg-white cursor-pointer flex justify-center items-center rounded-full"
           >
-            {description}
-          </p>
+            <BiPlus color="#ff2100" size={30} />
+          </button>
         </div>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex text-[#e87171] text-nowrap">
-          <p>GH₵{price}</p>
-        </div>
-        <button
-          onClick={() => {
-            setIsOrdering(true);
-            addPopUp();
-          }}
-          className="bg-white cursor-pointer flex justify-center items-center rounded-full"
-        >
-          <BiPlus color="#ff2100" size={30} />
-        </button>
       </div>
     </div>
   );

@@ -11,7 +11,11 @@ const orderSchema = new mongoose.Schema({
   ],
   contact: String,
   address: String,
-  riderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  riderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
   pending: String,
   confirmed: String,
   preparing: String,

@@ -9,7 +9,7 @@ const Footer = () => {
         </h1>
         <p>Contact us and we'll answer all your questions</p>
       </div>
-      <div className="flex gap-10 items-start pt-5">
+      <div className="flex flex-col gap-10 items-start pt-5 sm:flex-row">
         <a href="https://maps.app.goo.gl/8Hc4oTDfvq8ho64P7" target="_blank">
           <img src="app/assets/images/image.png" alt="googleMapLink" />
         </a>

@@ -6,6 +6,7 @@ import { AuthProvider } from "./Context/AuthContext";
 import { UserProvider } from "./Context/UserContext";
 import { CartProvider } from "./Context/CartContext";
 import { LocationProvider } from "./Context/LocationContext";
+import { AdminProvider } from "./Context/AdminContext";
 
 const root = document.getElementById("root");
 
@@ -17,7 +18,9 @@ if (root) {
           <UserProvider>
             <LocationProvider>
               <CartProvider>
-                <App />
+                <AdminProvider>
+                  <App />
+                </AdminProvider>
               </CartProvider>
             </LocationProvider>
           </UserProvider>

@@ -1,4 +1,3 @@
-require("@dotenvx/dotenvx").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -45,21 +44,29 @@ const FinishedDelivery = mongoose.model(
 const RiderFinishedDelivery = require("./models/RiderFinishedDelivery");
 
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
 // SCHEMAS
-const User = mongoose.model(
-  "User",
-  new mongoose.Schema({
-    name: String,
-    email: String,
-    password: String,
-    phone: String,
-    role: { type: String, enum: ["user", "admin", "rider"], default: "user" },
-  })
-);
+const bcrypt = require("bcryptjs");
+
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String,
+  phone: String,
+  role: { type: String, enum: ["user", "admin", "rider"], default: "user" },
+  resetToken: String,
+  resetTokenExpiry: Date,
+});
+
+// Method to compare password
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+const User = mongoose.model("User", userSchema);
 
 const MenuItem = mongoose.model(
   "MenuItem",
@@ -100,10 +107,9 @@ app.post("/admin/create-menu-item", async (req, res) => {
     const newItem = new MenuItem(newItemData);
 
     await newItem.save();
-    console.log(req.body);
     res.json({ success: true });
   } catch (err) {
-    console.error("Error saving menu item:", err);
+    alert("Error saving menu item:", err);
     res
       .status(500)
       .json({ success: false, error: "Server error while saving menu item" });
@@ -125,9 +131,22 @@ app.post("/signup", async (req, res) => {
         .status(409)
         .json({ success: false, error: "User already exists" });
     }
+
     const user = new User({ name, email, password, phone });
     await user.save();
-    res.json({ success: true, user });
+
+    const token = require("./utils/generateToken")(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ success: false, error: "Server error" });
@@ -135,10 +154,107 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { name, password } = req.body;
-  const user = await User.findOne({ name, password });
-  if (!user) return res.status(401).json({ error: "Invalid credentials" });
-  res.json({ success: true, user });
+  const { identifier, password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { name: identifier }],
+    });
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = require("./utils/generateToken")(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+const crypto = require("crypto");
+const sendEmail = require("./utils/sendEmail");
+
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res
+      .status(200)
+      .json({ message: "If email exists, reset link sent." });
+  }
+
+  const token = Math.floor(100000 + Math.random() * 900000).toString();
+  // Save token and expiry in user
+  user.resetToken = token;
+  user.resetTokenExpires = Date.now() + 3600000; // 1 hour
+  await user.save();
+
+  // Email the reset code
+  try {
+    await sendEmail(
+      user.email,
+      "Reset Password Code",
+      `<p>Hello ${user.name},</p>
+  <p>Your password reset code is: <strong>${token}</strong></p>
+  <p>This code will expire in 1 hour.</p>
+  <p>If you did not request a password reset, please ignore this email.</p>
+  <p>Thank you!</p>`
+    );
+    res.json({ success: true, message: "Reset link sent" });
+  } catch (err) {
+    res.status(500).json({ error: "Email send failed" });
+  }
+});
+
+app.post("/reset-password", async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: "User not found." });
+
+    if (!user.resetToken || Date.now() > user.resetTokenExpires) {
+      return res.status(400).json({ error: "Invalid or expired token." });
+    }
+
+    user.password = newPassword; // This will be hashed in pre("save")
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successful." });
+  } catch (err) {
+    console.error("Reset error:", err);
+    res.status(500).json({ error: "Server error." });
+  }
+});
+
+app.post("/verify-reset-code", async (req, res) => {
+  const { email, code } = req.body;
+  const user = await User.findOne({ email });
+
+  if (
+    !user ||
+    user.resetToken !== code ||
+    Date.now() > user.resetTokenExpires
+  ) {
+    return res.status(400).json({ error: "Invalid or expired code." });
+  }
+
+  res.json({ success: true, userId: user._id }); // You can optionally generate a temporary token here
 });
 
 app.get("/menu", async (req, res) => {
@@ -373,21 +489,38 @@ app.post("/admin/update-price", async (req, res) => {
 });
 
 app.post("/admin/create-user", async (req, res) => {
-  const { name, password, role, phone } = req.body;
-  if (!name || !password || !role) {
+  const { name, email, password, role, phone } = req.body;
+
+  // Validation
+  if (!name || !email || !password || !role) {
     return res
       .status(400)
       .json({ success: false, error: "All fields are required" });
   }
+
   try {
-    const existing = await User.findOne({ name });
+    // Check if user already exists by name or email
+    const existing = await User.findOne({ $or: [{ email }, { name }] });
     if (existing) {
       return res
         .status(409)
         .json({ success: false, error: "User already exists" });
     }
-    const newUser = new User({ name, password, role, phone });
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create and save new user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role, // "admin" or "rider"
+    });
+
     await newUser.save();
+
     res.json({ success: true, user: newUser });
   } catch (err) {
     console.error("Create user error:", err);
@@ -413,18 +546,16 @@ app.post("/order", async (req, res) => {
     await newOrder.save();
     res.json({ success: true, order: newOrder });
   } catch (error) {
-    console.error("Failed to save order:", error);
+    Alert("Failed to save order:", error);
     res.status(500).json({ success: false, error: "Order failed" });
   }
 });
 
 app.get("/user-orders/:userId", async (req, res) => {
   try {
-    console.log("Fetching orders for userId:", req.params.userId);
     const orders = await Order.find({ userId: req.params.userId })
       .populate("items.menuItem")
       .populate("riderId", "name phone");
-    console.log("Found orders:", orders.length);
     res.json(orders);
   } catch (error) {
     console.error("Failed to fetch user orders", error);
@@ -434,11 +565,9 @@ app.get("/user-orders/:userId", async (req, res) => {
 
 app.get("/user-finished-orders/:userId", async (req, res) => {
   try {
-    console.log("Fetching finished orders for userId:", req.params.userId);
     const orders = await FinishedDelivery.find({ userId: req.params.userId })
       .populate("items.menuItem")
       .populate("riderId", "name phone");
-    console.log("Found finished orders:", orders.length);
     res.json(orders);
   } catch (err) {
     console.error("Failed to fetch finished orders:", err);
@@ -507,17 +636,21 @@ app.get("/admin/finished-orders", async (req, res) => {
 
 app.post("/admin/assign-rider", async (req, res) => {
   const { orderId, riderId } = req.body;
+
   try {
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        riderId,
+        outForDelivery: new Date(), // ✅ critical for rider dashboard filtering
+      },
+      { new: true }
+    );
 
-    order.riderId = riderId;
-    await order.save();
-
-    res.json({ message: "Rider assigned successfully" });
+    res.json({ success: true, order: updatedOrder });
   } catch (err) {
-    console.error("Error assigning rider:", err);
-    res.status(500).json({ error: "Failed to assign rider" });
+    console.error("Failed to assign rider:", err);
+    res.status(500).json({ success: false, error: "Failed to assign rider" });
   }
 });
 
@@ -542,9 +675,11 @@ app.get("/admin/riders", async (req, res) => {
 
 app.get("/rider/current-orders/:riderId", async (req, res) => {
   try {
-    const orders = await Order.find({ riderId: req.params.riderId })
+    const riderObjectId = new mongoose.Types.ObjectId(req.params.riderId);
+    const orders = await Order.find({ riderId: riderObjectId })
       .populate("userId", "name")
       .populate("items.menuItem");
+
     res.json(orders);
   } catch (err) {
     console.error("Error fetching rider current orders:", err);
@@ -612,6 +747,7 @@ app.delete("/admin/delete-menu-item/:id", async (req, res) => {
 // User marks order as finished (received)
 app.post("/user/mark-finished", async (req, res) => {
   const { orderId } = req.body;
+  console.log("Received request to mark order as finished:", orderId);
 
   try {
     const order = await Order.findById(orderId)
@@ -620,12 +756,13 @@ app.post("/user/mark-finished", async (req, res) => {
       .populate("items.menuItem");
 
     if (!order) {
+      console.log("Order not found");
       return res.status(404).json({ error: "Order not found" });
     }
 
-    // Move to FinishedDelivery (user/admin)
     const finished = new FinishedDelivery({
       userId: order.userId._id,
+      userName: order.userId.name,
       riderId: order.riderId?._id,
       contact: order.contact,
       address: order.address,
@@ -640,13 +777,13 @@ app.post("/user/mark-finished", async (req, res) => {
     });
     await finished.save();
 
-    // Also create RiderFinishedDelivery if a rider is assigned
     if (order.riderId) {
       const RiderFinishedDeliveryModel = mongoose.model(
         "RiderFinishedDelivery"
       );
       const riderFinished = new RiderFinishedDeliveryModel({
         userId: order.userId._id,
+        userName: order.userId.name,
         riderId: order.riderId._id,
         contact: order.contact,
         address: order.address,
@@ -656,8 +793,14 @@ app.post("/user/mark-finished", async (req, res) => {
     }
 
     await Order.findByIdAndDelete(orderId);
-    res.json({ message: "Order moved to finished orders for user and rider." });
+    console.log("Order successfully moved to finished");
+
+    res.json({
+      success: true,
+      message: "Order moved to finished orders for user and rider.",
+    });
   } catch (err) {
+    console.error("Error in mark-finished:", err);
     res.status(500).json({ error: "Failed to move order to finished" });
   }
 });

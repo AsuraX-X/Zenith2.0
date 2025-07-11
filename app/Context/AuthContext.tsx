@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { ACI } from "../components/general/General";
+import type { ACI } from "../Interfaces/Interfaces";
 
 const AuthContext = createContext<null | ACI>(null);
 

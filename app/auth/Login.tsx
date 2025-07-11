@@ -71,6 +71,16 @@ const Login = () => {
           Sign Up
         </motion.span>
       </p>
+      <p className="text-gray-400">
+        Forgot your password?{" "}
+        <motion.span
+          whileHover={{ color: "#ff2100", cursor: "pointer" }}
+          transition={{ duration: 0.1 }}
+          onClick={() => navigate("/auth/forgot-password")}
+        >
+          Reset Password
+        </motion.span>
+      </p>
     </div>
   );
 };

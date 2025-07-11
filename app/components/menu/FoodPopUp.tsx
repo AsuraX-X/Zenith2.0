@@ -22,11 +22,12 @@ const FoodPopUp = ({
   image: string;
   menuItemId: string;
 }) => {
-  const [quantity, setQuantity] = useState(1);
+  const { cart, addToCart } = useCartContext();
+
+  const cartItem = cart.find((item) => item.menuItem._id === menuItemId);
+  const [quantity, setQuantity] = useState(cartItem ? cartItem.quantity : 1);
 
   const { removePopUp } = usePopUpContext();
-
-  const { addToCart } = useCartContext();
 
   return (
     <motion.div
@@ -40,7 +41,7 @@ const FoodPopUp = ({
       className="relative h-3/4 w-1/2 rounded-t-lg bg-[#0e1113] overflow-hidden"
     >
       <button
-        className="absolute right-4 top-4 bg-white cursor-pointer rounded-full p-1"
+        className="absolute right-4 top-4 bg-white cursor-pointer rounded-lg p-1"
         onClick={() => {
           close();
           removePopUp();
@@ -71,15 +72,15 @@ const FoodPopUp = ({
           />
         </div>
         <div className="px-4 py-6 flex items-center justify-center gap-4">
-          <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-full">
+          <div className="flex py-0.5 justify-center items-center w-fit px-2 border border-gray-500 rounded-lg">
             <button onClick={() => setQuantity(quantity + 1)}>
               <BiPlus />
             </button>
             <input
               type="number"
               className="w-8 h-8 text-center rounded flex items-center justify-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-0"
-              onChange={(e) => setQuantity(parseInt(e.target.value))}
               value={quantity}
+              readOnly
             />
             <button onClick={() => quantity > 1 && setQuantity(quantity - 1)}>
               <BiMinus />
@@ -87,7 +88,7 @@ const FoodPopUp = ({
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
-            className="flex w-full py-2 cursor-pointer bg-[#ff1200] justify-center items-center rounded-full"
+            className="flex w-full py-2 cursor-pointer bg-[#ff1200] justify-center items-center rounded-lg"
             onClick={() => {
               addToCart(close, name, description, price, menuItemId, quantity);
               removePopUp();

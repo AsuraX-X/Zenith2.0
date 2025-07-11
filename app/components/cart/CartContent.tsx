@@ -1,11 +1,11 @@
-import { BiPhone, BiPlusCircle, BiTrash } from "react-icons/bi";
+import { BiPhone, BiPlusCircle } from "react-icons/bi";
 import CartCard from "./CartCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
 import { useUser } from "../../Context/UserContext";
 import { useState, useRef, type ChangeEvent } from "react";
-import { type cartItem } from "../general/General";
+import { type cartItem } from "../../Interfaces/Interfaces";
 import { useCartContext } from "../../Context/CartContext";
 import { motion } from "motion/react";
 import { useLocationContext } from "../../Context/LocationContext";
@@ -14,6 +14,7 @@ const CartContent = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<string>("delivery");
 
   const [contact, setContact] = useState(user?.phone);
 
@@ -56,7 +57,7 @@ const CartContent = () => {
           quantity: item.quantity,
         })),
         contact,
-        location,
+        address: location,
       }),
     });
 
@@ -71,20 +72,20 @@ const CartContent = () => {
   };
 
   return (
-    <div className="pt-20 px-40 min-h-screen">
+    <div className="pt-20 md:px-40 px-4 min-h-screen">
       <div className="pb-2 mb-6 border-b border-b-[#ff2100] flex justify-between">
         <h1 className="text-3xl font-bold ">Cart</h1>
         <motion.button
           whileHover={{ backgroundColor: "#ff1200" }}
           onClick={clearCart}
-          className="flex size-8 justify-center items-center rounded-full cursor-pointer"
+          className="flex px-4 py-2 border border-[#ff1200] justify-center items-center rounded-lg cursor-pointer"
         >
-          <BiTrash size={20} />
+          Clear
         </motion.button>
       </div>
       {cart.length > 0 ? (
-        <div className="grid grid-cols-2 divide-x divide-gray-300 min-h-screen">
-          <div className="pr-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-gray-300 min-h-screen">
+          <div className="lg:pr-12">
             <section>
               <div className="flex flex-col gap-4">
                 {cart.map((item: cartItem) => (
@@ -100,7 +101,7 @@ const CartContent = () => {
                 ))}
               </div>
               <NavLink to="/menu">
-                <div className="flex cursor-pointer items-center py-4 border-b border-b-gray-500 gap-2 px-4">
+                <div className="flex cursor-pointer items-center py-4 border-y border-y-gray-500 mt-4 gap-2 px-4">
                   <BiPlusCircle size={25} color="#ff2100" />
                   <p>Add more</p>
                 </div>
@@ -114,9 +115,12 @@ const CartContent = () => {
               </div>
             </section>
           </div>
-          <div className="pl-12 sticky h-fit top-10 z-10">
+          <div className="lg:pl-12 lg:sticky h-fit top-10">
             <section className="pb-4  border-b border-b-gray-500">
-              <DelivOrPickUp />
+              <DelivOrPickUp
+                deliveryMethod={deliveryMethod}
+                setDeliveryMethod={setDeliveryMethod}
+              />
             </section>
             <section className="border-b border-b-gray-500">
               <div className="flex text-xl flex-col py-4 px-4 border-b border-b-gray-500 text-right">
@@ -136,55 +140,57 @@ const CartContent = () => {
               </div>
             </section>
             <section>
-              <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500 gap-4">
-                <div className="flex items-center gap-2 relative w-full">
-                  <LuMapPin size={20} />
-                  <input
-                    type="text"
-                    name="location"
-                    id="location"
-                    value={location}
-                    onChange={(e) => {
-                      setLocation(e.target.value);
-                      fetchPossibleLocation(e);
-                      setIsOpen(true);
-                    }}
-                    placeholder="Enter your location"
-                    className="focus:outline-none py-2 w-full overflow-hidden overflow-ellipsis"
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{
-                      opacity: isOpen ? 1 : 0,
-                      height: isOpen ? "auto" : 0,
-                    }}
-                    className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4 overflow-hidden"
-                  >
-                    <div className="divide-y divide-gray-500">
-                      {addresses.map(({ suburb, street }, i) => (
-                        <p
-                          key={i}
-                          onClick={() => {
-                            setLocation(`${suburb}, ${street}`);
-                            setIsOpen(false);
-                          }}
-                          className="py-2 cursor-pointer"
-                        >
-                          {suburb}, {street}
-                        </p>
-                      ))}
-                    </div>
-                  </motion.div>
+              {deliveryMethod === "delivery" && (
+                <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500 gap-4">
+                  <div className="flex items-center gap-2 relative w-full">
+                    <LuMapPin size={20} />
+                    <input
+                      type="text"
+                      name="location"
+                      id="location"
+                      value={location}
+                      onChange={(e) => {
+                        setLocation(e.target.value);
+                        fetchPossibleLocation(e);
+                        setIsOpen(true);
+                      }}
+                      placeholder="Enter your location"
+                      className="focus:outline-none py-2 w-full overflow-hidden overflow-ellipsis"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{
+                        opacity: isOpen ? 1 : 0,
+                        height: isOpen ? "auto" : 0,
+                      }}
+                      className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4 overflow-hidden"
+                    >
+                      <div className="divide-y divide-gray-500">
+                        {addresses.map(({ suburb, street }, i) => (
+                          <p
+                            key={i}
+                            onClick={() => {
+                              setLocation(`${suburb}, ${street}`);
+                              setIsOpen(false);
+                            }}
+                            className="py-2 cursor-pointer"
+                          >
+                            {suburb}, {street}
+                          </p>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
+                  <div className="flex shrink-0">
+                    <button
+                      onClick={findLocation}
+                      className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-lg cursor-pointer"
+                    >
+                      Use my location
+                    </button>
+                  </div>
                 </div>
-                <div className="flex shrink-0">
-                  <button
-                    onClick={findLocation}
-                    className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-full cursor-pointer"
-                  >
-                    Use my location
-                  </button>
-                </div>
-              </div>
+              )}
               <div className="flex flex-col px-4 py-2 border-b border-b-gray-500">
                 <div className="flex items-center gap-2">
                   <BiPhone size={20} />
@@ -207,7 +213,7 @@ const CartContent = () => {
               <div className="px-4 pt-4">
                 <button
                   onClick={handleConfirmOrder}
-                  className="bg-[#ff1200] w-full rounded-full py-2 text-2xl font-bold"
+                  className="bg-[#ff1200] w-full rounded-lg py-2 text-2xl font-bold"
                 >
                   Place Order
                 </button>
@@ -219,7 +225,7 @@ const CartContent = () => {
         <div className="py-12 h-[75vh] flex items-center justify-center flex-col ">
           <p className="text-xl text-gray-600">Your cart is empty.</p>
           <NavLink to="/menu">
-            <button className="mt-4 bg-[#ff2100] text-white px-6 py-3 rounded-full hover:bg-[#d81b00] transition">
+            <button className="mt-4 bg-[#ff2100] text-white px-6 py-3 rounded-lg hover:bg-[#d81b00] transition">
               Browse Menu
             </button>
           </NavLink>
