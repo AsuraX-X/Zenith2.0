@@ -1,260 +1,467 @@
-import type { Order } from "../../Interfaces/Interfaces";
+import { motion } from "motion/react";
+import { useAdminContext } from "../../Context/AdminContext";
+import type { Order, Rider } from "../../Interfaces/Interfaces";
+import { BiCheck, BiPhone } from "react-icons/bi";
+import { BsWhatsapp } from "react-icons/bs";
 
-const renderOrder = ({
+const AdminOrderCard = ({
   order,
-  showActions = true,
+  showActions = false,
+  riders,
 }: {
   order: Order;
   showActions?: boolean;
-}) => (
-  <div
-    key={order._id}
-    className="bg-[#181c1f] border border-gray-600 rounded-lg shadow-lg p-6 mb-6"
-  >
-    <div className="grid md:grid-cols-2 gap-6">
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-[#ff1200]">Order Details</h3>
+  riders: Rider[];
+}) => {
+  const { setFinishedOrders, finishedOrders, fetchOrders } = useAdminContext();
 
-        <div className="space-y-3">
-          <div>
-            <span className="font-semibold text-gray-300">User:</span>
-            <p className="">
-              {order.userId && order.userId.name
-                ? order.userId.name
-                : order.userName || "Unknown"}
-            </p>
-          </div>
+  const handleDeleteFinishedOrder = async (orderId: string) => {
+    const confirmDelete = window.confirm(
+      "Delete this finished order permanently?"
+    );
+    if (!confirmDelete) return;
 
-          <div>
-            <span className="font-semibold text-gray-300">Contact:</span>
-            <p className="">{order.contact || "N/A"}</p>
-            {order.contact && (
-              <div className="flex gap-3 mt-1">
-                <a
-                  href={`tel:${order.contact}`}
-                  className="bg-blue-600  px-3 py-1 rounded hover:bg-blue-700 transition"
-                >
-                  📞 Call
-                </a>
-                <a
-                  href={`https://wa.me/${order.contact}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-600  px-3 py-1 rounded hover:bg-green-700 transition"
-                >
-                  💬 WhatsApp
-                </a>
+    try {
+      const res = await fetch(`/api/admin/finished-orders/${orderId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setFinishedOrders(finishedOrders.filter((o) => o._id !== orderId));
+      } else {
+        alert("Failed to delete order.");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handleAssignRider = async (orderId: string, riderId: string) => {
+    try {
+      // If a rider is being assigned, automatically confirm all previous steps
+      if (riderId) {
+        const stepsToConfirm = [
+          { key: "confirmed", message: "Order Confirmed" },
+          { key: "preparing", message: "Preparing Your Order" },
+          { key: "packing", message: "Packing Your Order" },
+          { key: "outForDelivery", message: "Your order is out for delivery" },
+        ];
+
+        // Confirm each step that isn't already confirmed
+        for (const step of stepsToConfirm) {
+          if (!order[step.key]) {
+            const res = await fetch("/api/admin/order-status", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId,
+                statusKey: step.key,
+                value: step.message,
+              }),
+            });
+
+            if (!res.ok) {
+              throw new Error(`Failed to confirm ${step.key}`);
+            }
+          }
+        }
+      }
+
+      // Assign the rider
+      const res = await fetch("/api/admin/assign-rider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, riderId }),
+      });
+
+      if (res.ok) {
+        fetchOrders();
+      } else {
+        alert("Failed to assign rider");
+      }
+    } catch (error) {
+      console.error("Error in rider assignment:", error);
+      alert("Failed to assign rider and confirm steps");
+    }
+  };
+
+  const handleMakeChanges = async (
+    orderId: string,
+    statusKey: string,
+    value: string
+  ) => {
+    const res = await fetch("/api/admin/order-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, statusKey, value }),
+    });
+
+    if (res.ok) {
+      fetchOrders();
+    } else {
+      alert("Failed to update order status");
+    }
+  };
+
+  const handleCancelStep = async (orderId: string, statusKey: string) => {
+    // Reset the current step and all subsequent steps
+    const stepOrder = ["confirmed", "preparing", "packing", "outForDelivery"];
+    const currentStepIndex = stepOrder.indexOf(statusKey);
+
+    // Create updates to clear current and subsequent steps
+    const updates = stepOrder.slice(currentStepIndex).map((step) => ({
+      statusKey: step,
+      value: "",
+    }));
+
+    try {
+      // Send multiple updates to clear the steps
+      for (const update of updates) {
+        const res = await fetch("/api/admin/order-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            statusKey: update.statusKey,
+            value: update.value,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to cancel ${update.statusKey}`);
+        }
+      }
+
+      fetchOrders();
+    } catch (error) {
+      console.error("Failed to cancel step:", error);
+      alert("Failed to cancel step");
+    }
+  };
+
+  const steps = [
+    { key: "confirmed", label: "Order Confirmed" },
+    { key: "preparing", label: "Preparing" },
+    { key: "packing", label: "Packing" },
+    { key: "outForDelivery", label: "Out for Delivery" },
+  ];
+
+  const actionButtons = [
+    {
+      key: "confirmed",
+      completedText: "Confirmed",
+      pendingText: "Confirm Order",
+      messageText: "Order Confirmed",
+      prerequisite: null,
+      tooltips: {
+        completed: "Click to cancel confirmation",
+        pending: "Click to confirm order",
+        disabled: null,
+      },
+    },
+    {
+      key: "preparing",
+      completedText: "Preparing",
+      pendingText: "Start Preparing",
+      messageText: "Preparing Your Order",
+      prerequisite: "confirmed",
+      tooltips: {
+        completed: "Click to cancel preparation",
+        pending: "Click to start preparing",
+        disabled: "Confirm order first",
+      },
+    },
+    {
+      key: "packing",
+      completedText: "Packing",
+      pendingText: "Start Packing",
+      messageText: "Packing Your Order",
+      prerequisite: "preparing",
+      tooltips: {
+        completed: "Click to cancel packing",
+        pending: "Click to start packing",
+        disabled: "Start preparing first",
+      },
+    },
+    {
+      key: "outForDelivery",
+      completedText: "Out for Delivery",
+      pendingText: "Send for Delivery",
+      messageText: "Your order is out for delivery",
+      prerequisite: "packing",
+      tooltips: {
+        completed: "Click to cancel delivery",
+        pending: "Click to send for delivery",
+        disabled: "Complete packing first",
+      },
+    },
+  ];
+
+  return (
+    <div
+      key={order._id}
+      className="bg-[#181c1f] border border-gray-600 rounded-lg shadow-lg p-6 mb-6"
+    >
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-[#ff1200]">
+            Order Details
+          </h3>
+
+          <div className="space-y-3">
+            <div>
+              <span className="font-semibold text-gray-300">User:</span>
+              <p className="">
+                {order.userId && order.userId.name
+                  ? order.userId.name
+                  : order.userName || "Unknown"}
+              </p>
+            </div>
+
+            <div>
+              <div>
+                <p className="font-semibold text-gray-300 text-sm sm:text-base">
+                  Contact:
+                </p>
+                <p>{order.contact}</p>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2">
+                  <a
+                    href={`tel:${order.contact}`}
+                    className="bg-[#ff1200] flex justify-center items-center gap-2 px-3 py-2 rounded hover:bg-[#d81b00] transition text-white text-center text-sm sm:text-base"
+                  >
+                    <BiPhone /> Call
+                  </a>
+                  <a
+                    href={`https://wa.me/${order.contact}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-600 flex justify-center items-center gap-2 px-3 py-2 rounded hover:bg-green-700 transition text-white text-center text-sm sm:text-base"
+                  >
+                    <BsWhatsapp /> WhatsApp
+                  </a>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div>
-            <span className="font-semibold text-gray-300">Address:</span>
-            <a
-              href={order.address}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-[#ff1200] hover:text-[#ff3300] underline mt-1"
-            >
-              📍 View on Google Maps
-            </a>
-          </div>
+            <div>
+              <span className="font-semibold text-gray-300 text-sm sm:text-base">
+                Address:
+              </span>
+              <p className="text-gray-100 text-sm sm:text-base break-words">
+                {order.address}
+              </p>
+            </div>
 
-          <div>
-            <span className="font-semibold text-gray-300">Assigned Rider:</span>
-            <p className="">
-              {order.riderId && order.riderId.name
-                ? order.riderId.name
-                : "Not Assigned"}
-            </p>
-          </div>
-
-          {order.riderId && order.riderId.phone && (
             <div>
               <span className="font-semibold text-gray-300">
-                Rider Contact:
+                Assigned Rider:
               </span>
-              <p className="">{order.riderId.phone}</p>
+              <p className="">
+                {order.riderId && order.riderId.name
+                  ? order.riderId.name
+                  : "Not Assigned"}
+              </p>
             </div>
-          )}
-        </div>
-      </div>
 
-      <div>
-        <h4 className="font-semibold text-lg mb-3 ">Order Items:</h4>
-        <div className="bg-[#0e1113] border border-gray-600 rounded-lg p-4">
-          <ul className="space-y-2">
-            {order.items.map((item, idx) => (
-              <li key={idx} className="flex justify-between">
-                <span className="text-gray-300">
-                  {item.menuItem && item.menuItem.name
-                    ? item.menuItem.name
-                    : "Unknown Item"}
+            {order.riderId && order.riderId.phone && (
+              <div>
+                <span className="font-semibold text-gray-300">
+                  Rider Contact:
                 </span>
-                <span className="font-semibold text-[#ff1200]">
-                  × {item.quantity}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div className="mt-6">
-      <h4 className="font-semibold text-lg mb-3 ">Order Progress:</h4>
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-gray-400">
-          <span>⌛</span>
-          <span>Pending Confirmation</span>
-        </div>
-        {order.confirmed && (
-          <div className="flex items-center gap-2 text-[#ff1200] font-semibold">
-            <span>✅</span>
-            <span>Order Confirmed</span>
-          </div>
-        )}
-        {order.preparing && (
-          <div className="flex items-center gap-2 text-[#ff1200] font-semibold">
-            <span>✅</span>
-            <span>Order is being prepared</span>
-          </div>
-        )}
-        {order.packing && (
-          <div className="flex items-center gap-2 text-[#ff1200] font-semibold">
-            <span>✅</span>
-            <span>Order is being packed</span>
-          </div>
-        )}
-        {order.outForDelivery && (
-          <div className="flex items-center gap-2 text-[#ff1200] font-semibold">
-            <span>✅</span>
-            <span>Out for Delivery</span>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {showActions && (
-      <div className="mt-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Confirm Order:
-            </label>
-            <select
-              value={order.confirmed || ""}
-              onChange={(e) =>
-                handleMakeChanges(order._id, "confirmed", e.target.value)
-              }
-              className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] "
-            >
-              <option value="" className="bg-[#0e1113]">
-                Choose
-              </option>
-              <option value="✅ Order Confirmed" className="bg-[#0e1113]">
-                ✅ Order Confirmed
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Set Preparing:
-            </label>
-            <select
-              value={order.preparing || ""}
-              onChange={(e) =>
-                handleMakeChanges(order._id, "preparing", e.target.value)
-              }
-              className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] "
-            >
-              <option value="" className="bg-[#0e1113]">
-                Choose
-              </option>
-              <option value="✅ Preparing Your Order" className="bg-[#0e1113]">
-                ✅ Preparing Your Order
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Set Packaging:
-            </label>
-            <select
-              value={order.packing || ""}
-              onChange={(e) =>
-                handleMakeChanges(order._id, "packing", e.target.value)
-              }
-              className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] "
-            >
-              <option value="" className="bg-[#0e1113]">
-                Choose
-              </option>
-              <option value="✅ Packing Your Order" className="bg-[#0e1113]">
-                ✅ Packing Your Order
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Set Out For Delivery:
-            </label>
-            <select
-              value={order.outForDelivery || ""}
-              onChange={(e) =>
-                handleMakeChanges(order._id, "outForDelivery", e.target.value)
-              }
-              className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] "
-            >
-              <option value="" className="bg-[#0e1113]">
-                Choose
-              </option>
-              <option
-                value="✅ Your order is out for delivery"
-                className="bg-[#0e1113]"
-              >
-                ✅ Your order is out for delivery
-              </option>
-            </select>
+                <p className="">{order.riderId.phone}</p>
+              </div>
+            )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Assign Rider:
-          </label>
-          <select
-            value={order.riderId?._id || ""}
-            onChange={(e) => handleAssignRider(order._id, e.target.value)}
-            className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] "
-          >
-            <option value="" className="bg-[#0e1113]">
-              Select Rider
-            </option>
-            {riders.map((rider) => (
-              <option
-                key={rider._id}
-                value={rider._id}
-                className="bg-[#0e1113]"
-              >
-                {rider.name}
-              </option>
-            ))}
-          </select>
+          <h4 className="font-semibold text-lg mb-3 text-[#ff1200]">
+            Order Items:
+          </h4>
+          <div className="bg-[#0e1113] border border-gray-600 rounded-lg p-4">
+            <ul className="space-y-2">
+              {order.items.map((item, idx) => (
+                <li key={idx} className="flex justify-between">
+                  <span className="text-gray-300">
+                    {item.menuItem && item.menuItem.name
+                      ? item.menuItem.name
+                      : "Unknown Item"}
+                  </span>
+                  <span className="font-semibold text-[#ff1200]">
+                    × {item.quantity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
-    )}
 
-    {!showActions && (
-      <button
-        onClick={() => handleDeleteFinishedOrder(order._id)}
-        className="mt-6 w-full bg-red-600  py-3 rounded-lg font-semibold hover:bg-red-700 transition"
-      >
-        🗑 Delete
-      </button>
-    )}
-  </div>
-);
+      <div className="mb-4">
+        <h4 className="font-semibold text-base sm:text-lg mt-4 mb-3 sm:mt-0 sm:mb-3 text-[#ff1200]">
+          Order Progress
+        </h4>
+        <div className="space-y-2">
+          <div className="flex-col flex md:flex-row mb-10 sm:px-9">
+            {steps.map(({ key, label }, i) => (
+              <div
+                key={key}
+                className="flex items-center w-fit md:flex-row flex-col"
+              >
+                <div className="relative flex items-center md:justify-center">
+                  <motion.div
+                    initial={{
+                      borderColor: "#6c6c6c",
+                      backgroundColor: "#0e1113",
+                    }}
+                    animate={{
+                      borderColor: (() => {
+                        if (order[key]) return "#00ff3c";
+
+                        const completedSteps = steps
+                          .slice(0, i)
+                          .every((step) => order[step.key]);
+                        const isCurrentStep = completedSteps && !order[key];
+
+                        return isCurrentStep ? "#00ff3c" : "#6c6c6c";
+                      })(),
+                      backgroundColor: order[key] ? "#00ff3c" : "#0e1113",
+                    }}
+                    className="border-gray-300 border rounded-full p-0.5"
+                  >
+                    <motion.p
+                      initial={{ color: "#0e1113" }}
+                      animate={{
+                        color: order[key] ? "#000000" : "#0e1113",
+                      }}
+                    >
+                      <BiCheck />
+                    </motion.p>
+                  </motion.div>
+
+                  <motion.span
+                    initial={{ color: "#ffffff" }}
+                    animate={{
+                      color: order[key] ? "#00ff3c" : "#ffffff",
+                    }}
+                    className="absolute md:top-[100%] left-[100%] text-xs md:mt-1 text-nowrap sm:ml-0 ml-3 md:left-auto"
+                  >
+                    {label}
+                  </motion.span>
+                </div>
+                {i < steps.length - 1 && (
+                  <motion.div
+                    initial={{ backgroundColor: "#6c6c6c" }}
+                    animate={{
+                      backgroundColor: order[key] ? "#00ff3c" : "#6c6c6c",
+                    }}
+                    className="bg-gray-400 md:w-30 w-px h-10 md:h-px"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {showActions && (
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {actionButtons.map((button) => {
+              const isCompleted = order[button.key];
+              const isDisabled = button.prerequisite
+                ? !order[button.prerequisite]
+                : false;
+
+              const getTooltip = () => {
+                if (isDisabled) return button.tooltips.disabled || "";
+                return isCompleted
+                  ? button.tooltips.completed
+                  : button.tooltips.pending;
+              };
+
+              const getBackgroundColor = () => {
+                if (isCompleted) return "#16a34a";
+                if (button.prerequisite) {
+                  return order[button.prerequisite] ? "#4b5563" : "#1f2937";
+                }
+                // For buttons with no prerequisite (like confirmed), use the ready state
+                return "#4b5563";
+              };
+
+              const getHoverColor = () => {
+                if (isCompleted) return "#22c55e"; // Lighter green for completed steps
+                if (button.prerequisite) {
+                  return order[button.prerequisite] ? "#ff1200" : "#1f2937";
+                }
+                // For buttons with no prerequisite (like confirmed), always allow hover
+                return "#ff1200";
+              };
+
+              return (
+                <motion.button
+                  key={button.key}
+                  onClick={() =>
+                    isCompleted
+                      ? handleCancelStep(order._id, button.key)
+                      : handleMakeChanges(
+                          order._id,
+                          button.key,
+                          button.messageText
+                        )
+                  }
+                  animate={{
+                    backgroundColor: getBackgroundColor(),
+                  }}
+                  whileHover={{
+                    backgroundColor: getHoverColor(),
+                  }}
+                  className="w-full py-2 px-4 rounded-lg font-medium"
+                  style={{
+                    cursor: isDisabled ? "not-allowed" : "pointer",
+                  }}
+                  disabled={isDisabled}
+                  title={getTooltip()}
+                >
+                  {isCompleted ? button.completedText : button.pendingText}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-gray-300">Assign Rider:</h5>
+            <select
+              value={order.riderId?._id || ""}
+              onChange={(e) => handleAssignRider(order._id, e.target.value)}
+              className="w-full p-2 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white"
+            >
+              <option value="" className="bg-[#0e1113]">
+                Select Rider
+              </option>
+              {riders.map((rider) => (
+                <option
+                  key={rider._id}
+                  value={rider._id}
+                  className="bg-[#0e1113]"
+                >
+                  {rider.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {!showActions && (
+        <button
+          onClick={() => handleDeleteFinishedOrder(order._id)}
+          className="mt-6 w-full bg-red-600  py-3 rounded-lg font-semibold hover:bg-red-700 transition"
+        >
+          🗑 Delete
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default AdminOrderCard;

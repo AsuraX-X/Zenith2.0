@@ -35,7 +35,7 @@ const FullMenu = () => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const res = await fetch("http://localhost:3000/menu");
+        const res = await fetch("/api/menu");
         const data: MenuItem[] = await res.json();
         setMenuItems(data);
         const uniqueTypes = Array.from(

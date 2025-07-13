@@ -21,9 +21,7 @@ const OrderContent = () => {
       if (user && (user._id || user.id)) {
         const userId = user._id || user.id;
         try {
-          const activeRes = await fetch(
-            `http://localhost:3000/user-orders/${userId}`
-          );
+          const activeRes = await fetch(`/api/user-orders/${userId}`);
           if (!activeRes.ok)
             throw new Error(`HTTP error! status: ${activeRes.status}`);
           const activeData = await activeRes.json();
@@ -35,7 +33,7 @@ const OrderContent = () => {
 
         try {
           const finishedRes = await fetch(
-            `http://localhost:3000/user-finished-orders/${userId}`
+            `/api/user-finished-orders/${userId}`
           );
           if (!finishedRes.ok)
             throw new Error(`HTTP error! status: ${finishedRes.status}`);
@@ -53,11 +51,32 @@ const OrderContent = () => {
     };
 
     fetchOrders();
+
+    // Set up polling for real-time updates
+    const pollInterval = setInterval(fetchOrders, 15000); // Poll every 15 seconds
+
+    return () => clearInterval(pollInterval);
   }, [user]);
 
   useEffect(() => {
     console.log(activeOrders);
   }, [activeOrders]);
+
+  const handleOrderUpdate = (updatedOrder: Order) => {
+    setActiveOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order._id === updatedOrder._id ? updatedOrder : order
+      )
+    );
+  };
+
+  const handleFinishedOrderUpdate = (updatedOrder: Order) => {
+    setFinishedOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order._id === updatedOrder._id ? updatedOrder : order
+      )
+    );
+  };
 
   return (
     <div className="mt-20 px-4">
@@ -69,6 +88,9 @@ const OrderContent = () => {
             animate={{
               backgroundColor: view === "active" ? "#ff1200" : "#0e1113",
             }}
+            whileHover={{
+              color: view !== "active" ? "#ff1200" : "#ffffff",
+            }}
             className="sm:px-6 sm:py-3 px-3 py-2 rounded-lg font-semibold cursor-pointer "
             onClick={() => setView("active")}
           >
@@ -78,6 +100,9 @@ const OrderContent = () => {
             initial={{ backgroundColor: "#0e1113 " }}
             animate={{
               backgroundColor: view === "finished" ? "#ff1200" : "#0e1113",
+            }}
+            whileHover={{
+              color: view !== "finished" ? "#ff1200" : "#ffffff",
             }}
             className="sm:px-6 sm:py-3 px-3 py-2  rounded-lg font-semibold cursor-pointer "
             onClick={() => setView("finished")}
@@ -90,7 +115,13 @@ const OrderContent = () => {
         {view === "active" ? (
           <div>
             {activeOrders.length > 0 ? (
-              activeOrders.map((item, i) => <OrderCard key={i} order={item} />)
+              activeOrders.map((item) => (
+                <OrderCard
+                  key={item._id}
+                  order={item}
+                  onOrderUpdate={handleOrderUpdate}
+                />
+              ))
             ) : (
               <div className="h-120 flex justify-center items-center">
                 <p className="text-xl font-bold text-gray-400">
@@ -102,8 +133,13 @@ const OrderContent = () => {
         ) : (
           <div>
             {finishedOrders.length > 0 ? (
-              finishedOrders.map((item, i) => (
-                <OrderCard key={i} order={item} isActive={false} />
+              finishedOrders.map((item) => (
+                <OrderCard
+                  key={item._id}
+                  order={item}
+                  isActive={false}
+                  onOrderUpdate={handleFinishedOrderUpdate}
+                />
               ))
             ) : (
               <div className="h-120 flex justify-center items-center">

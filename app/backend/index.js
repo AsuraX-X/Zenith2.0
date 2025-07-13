@@ -575,6 +575,24 @@ app.get("/user-finished-orders/:userId", async (req, res) => {
   }
 });
 
+// Get specific order by ID for real-time updates
+app.get("/user/order/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId)
+      .populate("items.menuItem")
+      .populate("riderId", "name phone");
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error("Failed to fetch order:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.get("/admin/orders", async (req, res) => {
   try {
     const orders = await Order.find()
@@ -806,5 +824,5 @@ app.post("/user/mark-finished", async (req, res) => {
 });
 
 app.listen(3000, "0.0.0.0", () => {
-  console.log("Backend running on http://localhost:3000");
+  console.log("Backend running on /api");
 });

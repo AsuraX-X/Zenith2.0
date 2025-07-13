@@ -17,6 +17,10 @@ interface LCI {
   findLocation: () => void;
   autoComplete: (location: string) => void;
   addresses: address[];
+  cordinates: {
+    lat: number;
+    long: number;
+  };
 }
 
 const LocationContext = createContext<null | LCI>(null);
@@ -25,6 +29,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [location, setLocation] = useState("");
   const [addresses, setAddresses] = useState<address[]>([]);
   const key = import.meta.env.VITE_LOCATIONIQ_KEY;
+  const [cordinates, setCordinates] = useState({ lat: 5.56, long: -0.205 });
 
   function findLocation() {
     if (navigator.geolocation) {
@@ -34,10 +39,11 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     }
 
     function successCallback(position: GeolocationPosition) {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-      reverseGeocode(latitude, longitude);
+      const lat = position.coords.latitude;
+      const long = position.coords.longitude;
+      console.log(`lat: ${lat}, long: ${long}`);
+      setCordinates({ lat, long });
+      reverseGeocode(cordinates.lat, cordinates.long);
     }
   }
 
@@ -103,7 +109,14 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <LocationContext
-      value={{ location, setLocation, findLocation, autoComplete, addresses }}
+      value={{
+        cordinates,
+        location,
+        setLocation,
+        findLocation,
+        autoComplete,
+        addresses,
+      }}
     >
       {children}
     </LocationContext>

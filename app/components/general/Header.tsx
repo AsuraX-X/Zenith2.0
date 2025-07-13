@@ -213,18 +213,27 @@ const Header = () => {
           {/* Navigation Links */}
           <div className="flex flex-col gap-3">
             {routes.map((route) => (
-              <NavLink
+              <motion.div
                 key={route.path}
-                to={route.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-left py-2 px-3 rounded-lg transition ${
-                  location.pathname === route.path
-                    ? "bg-[#ff1200] text-white"
-                    : "hover:bg-gray-800"
-                }`}
+                whileHover={{
+                  scale: 1.02,
+                  backgroundColor:
+                    location.pathname === route.path ? "#ff1200" : "#232426",
+                }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                animate={{
+                  backgroundColor:
+                    location.pathname === route.path ||
+                    (route.path === "/admin/orders" &&
+                      location.pathname === "/admin")
+                      ? "#ff1200"
+                      : "transparent",
+                }}
+                className="text-left py-2 px-3 rounded-lg"
               >
-                {route.name}
-              </NavLink>
+                <NavLink to={route.path}>{route.name}</NavLink>
+              </motion.div>
             ))}
           </div>
 

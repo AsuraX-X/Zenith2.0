@@ -10,6 +10,7 @@ import type {
   FormData,
   MenuItem,
   NewUser,
+  Order,
 } from "../Interfaces/Interfaces";
 
 interface ADCI {
@@ -30,6 +31,11 @@ interface ADCI {
   categories: string[];
   filter: string[];
   uniqueCategories: string[];
+  activeOrders: Order[];
+  setActiveOrders: (orders: Order[]) => void;
+  finishedOrders: Order[];
+  setFinishedOrders: (orders: Order[]) => void;
+  fetchOrders: () => void;
 }
 
 const AdminContext = createContext<ADCI | undefined>(undefined);
@@ -53,6 +59,8 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
   const [filter, setFilter] = useState<string[]>([]);
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
+  const [finishedOrders, setFinishedOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     refreshMenu();
@@ -239,6 +247,28 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const fetchOrders = async () => {
+    try {
+      const [activeRes, finishedRes] = await Promise.all([
+        fetch("/api/admin/orders"),
+        fetch("/api/admin/finished-orders"),
+      ]);
+
+      const activeData = await activeRes.json();
+      const finishedData = await finishedRes.json();
+
+      console.log("Active orders data:", activeData);
+      console.log("Finished orders data:", finishedData);
+
+      setActiveOrders(Array.isArray(activeData) ? activeData : []);
+      setFinishedOrders(Array.isArray(finishedData) ? finishedData : []);
+    } catch (err) {
+      console.error("Failed to fetch orders", err);
+      setActiveOrders([]);
+      setFinishedOrders([]);
+    }
+  };
+
   return (
     <AdminContext
       value={{
@@ -259,6 +289,11 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         addFilter,
         categories,
         handleSubmit,
+        activeOrders,
+        finishedOrders,
+        setActiveOrders,
+        setFinishedOrders,
+        fetchOrders,
       }}
     >
       {children}

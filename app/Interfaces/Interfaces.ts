@@ -58,6 +58,13 @@ export interface OrderItem {
 
 export interface Order {
   _id: string;
+  userId?: {
+    _id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  };
+  userName: string;
   contact: string;
   address: string;
   pending: string;
@@ -65,13 +72,19 @@ export interface Order {
   preparing: string;
   packing: string;
   outForDelivery: string;
-  delivered: string;
   riderId?: {
+    _id: string;
     name: string;
     phone: string;
   };
   items: OrderItem[];
-  [key: string]: unknown; // Allow dynamic property access
+  [key: string]: unknown;
+}
+
+export interface Rider {
+  _id: string;
+  name: string;
+  phone: string;
 }
 
 export interface cartItem {

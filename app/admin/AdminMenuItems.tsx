@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useAdminContext } from "../../Context/AdminContext";
-import type { MenuItem } from "../../Interfaces/Interfaces";
-import AdminSideBar from "../AdminSideBar";
-import AdminMenuItemCard from "./AdminMenuItemCard";
+import { useAdminContext } from "../Context/AdminContext";
+import type { MenuItem } from "../Interfaces/Interfaces";
+import AdminSideBar from "./AdminSideBar";
+import AdminMenuItemCard from "../components/admin/AdminMenuItemCard";
 
 const AdminMenuItems = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +48,7 @@ const AdminMenuItems = () => {
                 placeholder="Price"
                 type="number"
                 step="0.01"
-                className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white placeholder-gray-400"
+                className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white placeholder-gray-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <input
                 name="category"
