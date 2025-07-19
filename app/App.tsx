@@ -9,11 +9,15 @@ import ResetPassword from "./auth/ResetPassword";
 import AdminMenuItems from "./admin/AdminMenuItems";
 import CreateRole from "./admin/CreateRole";
 import RiderDashboard from "./routes/RiderDashboard";
-import { useUser } from "./Context/UserContext";
 import CustomerRoute from "./routes/CustomerRoute";
+import { useUserStore } from "./stores/userStore";
+import { usePopUpEffects, useUserEffects } from "./hooks";
 
 const App = () => {
-  const { user } = useUser();
+  const user = useUserStore((state) => state.user);
+
+  usePopUpEffects();
+  useUserEffects();
 
   return (
     <Routes>
@@ -34,7 +38,7 @@ const App = () => {
         <Route path="reset-password" element={<ResetPassword />} />
       </Route>
       <Route path="/rider" element={<RiderDashboard />} />
-      <Route path="/map" element={<CustomerRoute />} />
+      <Route path="/map/:location" element={<CustomerRoute />} />
     </Routes>
   );
 };

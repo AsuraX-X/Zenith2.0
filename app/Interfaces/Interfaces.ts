@@ -66,7 +66,7 @@ export interface Order {
   };
   userName: string;
   contact: string;
-  address: string;
+  location: location;
   pending: string;
   confirmed: string;
   preparing: string;
@@ -79,6 +79,12 @@ export interface Order {
   };
   items: OrderItem[];
   [key: string]: unknown;
+}
+
+export interface location {
+  name: string;
+  lat: number;
+  lon: number;
 }
 
 export interface Rider {

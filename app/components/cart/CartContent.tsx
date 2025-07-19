@@ -3,71 +3,98 @@ import CartCard from "./CartCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
-import { useUser } from "../../Context/UserContext";
 import { useState, useRef, type ChangeEvent } from "react";
 import { type cartItem } from "../../Interfaces/Interfaces";
-import { useCartContext } from "../../Context/CartContext";
+import { useCartStore } from "../../stores/cartStore";
 import { motion } from "motion/react";
-import { useLocationContext } from "../../Context/LocationContext";
+import { useLocationStore } from "../../stores/locationStore";
+import { useUserStore } from "../../stores/userStore";
 
 const CartContent = () => {
-  const { user } = useUser();
+  const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<string>("delivery");
 
-  const [contact, setContact] = useState(user?.phone);
+  const [contact, setContact] = useState(user?.phone || "");
 
-  const { cart, clearCart, total } = useCartContext();
+  // Use Zustand store instead of CartContext
+  const { clearCart } = useCartStore();
 
-  const { findLocation, location, setLocation, autoComplete, addresses } =
-    useLocationContext();
+  const cart = useCartStore((state) => state.cart || []); // Single selector for cart
+
+  // Calculate total in component to avoid infinite loops
+  const total = cart.reduce(
+    (sum, item) => sum + item.menuItem.price * item.quantity,
+    0
+  );
+
+  // Get location store functions once
+  const { findLocation, geocode, setLocation, autoComplete } =
+    useLocationStore();
+
+  // Use separate selectors to avoid creating new objects
+  const location = useLocationStore(
+    (state) => state.location ?? { name: "", lat: 0, lon: 0 }
+  );
+  const addresses = useLocationStore((state) => state.addresses ?? []);
 
   const handler = useRef<NodeJS.Timeout | null>(null);
 
   const fetchPossibleLocation = (e: ChangeEvent<HTMLInputElement>) => {
-    if (handler.current) {
-      clearTimeout(handler.current);
-    }
+    try {
+      if (handler.current) {
+        clearTimeout(handler.current);
+      }
 
-    handler.current = setTimeout(() => {
-      autoComplete(e.target.value);
-    }, 1000);
+      handler.current = setTimeout(() => {
+        if (autoComplete && e.target.value.trim()) {
+          autoComplete(e.target.value);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error in fetchPossibleLocation:", error);
+    }
   };
 
   const handleConfirmOrder = async () => {
-    if (!user || !user.name) {
-      alert("User not logged in");
-      return;
-    }
+    try {
+      if (!user || !user.name) {
+        alert("User not logged in");
+        return;
+      }
 
-    if (!contact || !location) {
-      alert("Please provide contact and address.");
-      return;
-    }
+      if (!contact || !location?.name) {
+        alert("Please provide contact and address.");
+        return;
+      }
 
-    const res = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user._id || user.id,
-        userName: user.name,
-        items: cart.map((item: cartItem) => ({
-          menuItem: item.menuItem._id,
-          quantity: item.quantity,
-        })),
-        contact,
-        address: location,
-      }),
-    });
+      const res = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id || user.id,
+          userName: user.name,
+          items: cart.map((item: cartItem) => ({
+            menuItem: item.menuItem._id,
+            quantity: item.quantity,
+          })),
+          contact,
+          location,
+        }),
+      });
 
-    const result = await res.json();
-    if (result.success) {
-      alert("Order confirmed!");
-      clearCart();
-      navigate("/orders");
-    } else {
-      alert("Order failed");
+      const result = await res.json();
+      if (result.success) {
+        alert("Order confirmed!");
+        clearCart();
+        navigate("/orders");
+      } else {
+        alert("Order failed: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error confirming order:", error);
+      alert("Order failed: Network error");
     }
   };
 
@@ -148,11 +175,18 @@ const CartContent = () => {
                       type="text"
                       name="location"
                       id="location"
-                      value={location}
+                      value={location?.name || ""}
                       onChange={(e) => {
-                        setLocation(e.target.value);
-                        fetchPossibleLocation(e);
-                        setIsOpen(true);
+                        try {
+                          setLocation({
+                            ...location,
+                            name: e.target.value,
+                          });
+                          fetchPossibleLocation(e);
+                          setIsOpen(true);
+                        } catch (error) {
+                          console.error("Error updating location:", error);
+                        }
                       }}
                       placeholder="Enter your location"
                       className="focus:outline-none py-2 w-full overflow-hidden overflow-ellipsis"
@@ -166,24 +200,50 @@ const CartContent = () => {
                       className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4 overflow-hidden"
                     >
                       <div className="divide-y divide-gray-500">
-                        {addresses.map(({ suburb, street }, i) => (
-                          <p
-                            key={i}
-                            onClick={() => {
-                              setLocation(`${suburb}, ${street}`);
-                              setIsOpen(false);
-                            }}
-                            className="py-2 cursor-pointer"
-                          >
-                            {suburb}, {street}
-                          </p>
-                        ))}
+                        {addresses &&
+                          addresses.length > 0 &&
+                          addresses.map(({ suburb, street }, i: number) => (
+                            <p
+                              key={i}
+                              onClick={() => {
+                                try {
+                                  const locationName = `${suburb || ""}, ${
+                                    street || ""
+                                  }`;
+                                  setLocation({
+                                    ...location,
+                                    name: locationName,
+                                  });
+                                  if (geocode) {
+                                    geocode(locationName);
+                                  }
+                                  setIsOpen(false);
+                                } catch (error) {
+                                  console.error(
+                                    "Error selecting location:",
+                                    error
+                                  );
+                                }
+                              }}
+                              className="py-2 cursor-pointer"
+                            >
+                              {suburb || "Unknown"}, {street || "Unknown"}
+                            </p>
+                          ))}
                       </div>
                     </motion.div>
                   </div>
                   <div className="flex shrink-0">
                     <button
-                      onClick={findLocation}
+                      onClick={() => {
+                        try {
+                          if (findLocation) {
+                            findLocation();
+                          }
+                        } catch (error) {
+                          console.error("Error finding location:", error);
+                        }
+                      }}
                       className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-lg cursor-pointer"
                     >
                       Use my location

@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthContext } from "../Context/AuthContext";
-import { usePopUpContext } from "../Context/PopUpContext";
+import { usePopUpStore } from "../stores/popUpStore";
+import { useAuthStore } from "../stores/authStore";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -11,8 +11,8 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const { setAuth } = useAuthContext();
-  const { addPopUp } = usePopUpContext();
+  const { setAuth } = useAuthStore();
+  const { addPopUp } = usePopUpStore();
 
   // Step 1: Send reset code to email
   const handleSendCode = async (e: React.FormEvent) => {

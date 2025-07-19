@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import AdminSideBar from "./AdminSideBar";
-import { useAdminContext } from "../Context/AdminContext";
 import AdminOrderCard from "../components/admin/AdminOrderCard";
 import type { Rider } from "../Interfaces/Interfaces";
 import { motion } from "motion/react";
+import { useAdminStore } from "../stores/adminStore";
 
 export default function AdminOrders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [view, setView] = useState("current");
 
-  const { fetchOrders, activeOrders, finishedOrders } = useAdminContext();
+  const { fetchOrders } = useAdminStore();
+
+  // Use separate selectors to avoid creating new objects
+  const activeOrders = useAdminStore((state) => state.activeOrders);
+  const finishedOrders = useAdminStore((state) => state.finishedOrders);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;

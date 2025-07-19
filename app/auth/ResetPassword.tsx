@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "../Context/AuthContext";
-import { usePopUpContext } from "../Context/PopUpContext";
+import { usePopUpStore } from "../stores/popUpStore";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");
@@ -10,8 +10,8 @@ export default function ResetPassword() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setAuth } = useAuthContext();
-  const { addPopUp } = usePopUpContext();
+  const { setAuth } = useAuthStore();
+  const { addPopUp } = usePopUpStore();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();

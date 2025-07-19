@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
-import { useAdminContext } from "../../Context/AdminContext";
 import type { Order, Rider } from "../../Interfaces/Interfaces";
 import { BiCheck, BiPhone } from "react-icons/bi";
 import { BsWhatsapp } from "react-icons/bs";
+import { useAdminStore } from "../../stores/adminStore";
 
 const AdminOrderCard = ({
   order,
@@ -13,7 +13,7 @@ const AdminOrderCard = ({
   showActions?: boolean;
   riders: Rider[];
 }) => {
-  const { setFinishedOrders, finishedOrders, fetchOrders } = useAdminContext();
+  const { setFinishedOrders, finishedOrders, fetchOrders } = useAdminStore();
 
   const handleDeleteFinishedOrder = async (orderId: string) => {
     const confirmDelete = window.confirm(
@@ -247,7 +247,9 @@ const AdminOrderCard = ({
                 Address:
               </span>
               <p className="text-gray-100 text-sm sm:text-base break-words">
-                {order.address}
+                {order.location?.name ||
+                  (order as Order & { address?: string }).address ||
+                  "Address not available"}
               </p>
             </div>
 

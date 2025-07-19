@@ -1,15 +1,15 @@
 import { motion } from "motion/react";
-import { useAuthContext } from "../Context/AuthContext";
-import { useUser } from "../Context/UserContext";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { signup } from "../services/api";
-import { usePopUpContext } from "../Context/PopUpContext";
+import { usePopUpStore } from "../stores/popUpStore";
+import { useAuthStore } from "../stores/authStore";
+import { useUserStore } from "../stores/userStore";
 
 const Register = () => {
-  const { setAuth } = useAuthContext();
-  const { removePopUp } = usePopUpContext();
-  const { setUser } = useUser(); // ✅ Use context
+  const { setAuth } = useAuthStore();
+  const { removePopUp } = usePopUpStore();
+  const { setUser } = useUserStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

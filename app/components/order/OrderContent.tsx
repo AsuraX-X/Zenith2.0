@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useUser } from "../../Context/UserContext";
 import { useEffect } from "react";
 import OrderCard from "./OrderCard";
 import { motion } from "motion/react";
 import type { Order } from "../../Interfaces/Interfaces";
+import { useUserStore } from "../../stores/userStore";
 
 const OrderContent = () => {
-  const { user } = useUser();
+  const user = useUserStore((state) => state.user);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [finishedOrders, setFinishedOrders] = useState<Order[]>([]);
   const [view, setView] = useState("active");

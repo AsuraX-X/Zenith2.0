@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { useScheduleContext } from "../../Context/ScheduleContext";
+import { useEffect, useMemo, useState } from "react";
 import { BiChevronDown } from "react-icons/bi";
 
 const OPEN_TIME = 10; // 10:00 AM
@@ -82,7 +81,12 @@ function getAvailableSlots() {
 const SchedulePopUp = ({ action }: { action: () => void }) => {
   const { date, slots } = useMemo(getAvailableSlots, []);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { setSchedule, schedule } = useScheduleContext();
+  const [schedule, setSchedule] = useState("");
+
+  // useEffect(() => {
+  //   localStorage.setItem("slot", schedule);
+  // }, [schedule]);
+
   return (
     <div className="p-6 rounded-lg bg-[#0e1113] text-[#f3f4f6] shadow-lg shadow-black/50">
       <h3 className="text-[#e5e7eb] text-lg font-semibold mb-2">

@@ -1,19 +1,22 @@
 import { NavLink, useLocation, useNavigate } from "react-router";
-import { useAuthContext } from "../../Context/AuthContext";
-import { usePopUpContext } from "../../Context/PopUpContext";
-import { useUser } from "../../Context/UserContext";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BiChevronDown, BiUserCircle, BiMenu, BiX } from "react-icons/bi";
-import { useCartContext } from "../../Context/CartContext";
+import {} from "../../Context/CartContext";
 import { FiShoppingCart } from "react-icons/fi";
+import { useCartStore } from "../../stores/cartStore";
+import { useUserStore } from "../../stores/userStore";
+import { useAuthStore } from "../../stores/authStore";
+import { usePopUpStore } from "../../stores/popUpStore";
 
 const Header = () => {
-  const { setAuth } = useAuthContext();
+  const { setAuth } = useAuthStore();
   const location = useLocation();
-  const { addPopUp } = usePopUpContext();
-  const { user, setUser } = useUser();
-  const { cart } = useCartContext();
+  const { addPopUp } = usePopUpStore();
+  const { setUser } = useUserStore();
+  const user = useUserStore((state) => state.user);
+
+  const cart = useCartStore((state) => state.cart);
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();

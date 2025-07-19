@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BiPlus } from "react-icons/bi";
 import FoodPopUp from "./FoodPopUp";
 import { AnimatePresence, motion } from "motion/react";
-import { usePopUpContext } from "../../Context/PopUpContext";
+import { usePopUpStore } from "../../stores/popUpStore";
 
 const FoodCard = ({
   name,
@@ -18,7 +18,7 @@ const FoodCard = ({
   image: string;
 }) => {
   const [isOrdering, setIsOrdering] = useState(false);
-  const { addPopUp } = usePopUpContext();
+  const { addPopUp } = usePopUpStore();
 
   return (
     <div className="flex items-center justify-between gap-4 border border-gray-500 pr-4 rounded-lg overflow-hidden">

@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { location } from "../Interfaces/Interfaces";
 
 type address = {
   suburb: string;
@@ -12,24 +13,29 @@ type address = {
 };
 
 interface LCI {
-  location: string;
-  setLocation: (location: string) => void;
+  location: location;
+  setLocation: (location: location) => void;
   findLocation: () => void;
+  geocode: (location: string) => void;
   autoComplete: (location: string) => void;
   addresses: address[];
   cordinates: {
     lat: number;
-    long: number;
+    lon: number;
   };
 }
 
 const LocationContext = createContext<null | LCI>(null);
 
 export const LocationProvider = ({ children }: { children: ReactNode }) => {
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<location>({
+    name: "",
+    lat: 0,
+    lon: 0,
+  });
   const [addresses, setAddresses] = useState<address[]>([]);
   const key = import.meta.env.VITE_LOCATIONIQ_KEY;
-  const [cordinates, setCordinates] = useState({ lat: 5.56, long: -0.205 });
+  const [cordinates, setCordinates] = useState({ lat: 5.56, lon: -0.205 });
 
   function findLocation() {
     if (navigator.geolocation) {
@@ -40,21 +46,29 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
     function successCallback(position: GeolocationPosition) {
       const lat = position.coords.latitude;
-      const long = position.coords.longitude;
-      console.log(`lat: ${lat}, long: ${long}`);
-      setCordinates({ lat, long });
-      reverseGeocode(cordinates.lat, cordinates.long);
+      const lon = position.coords.longitude;
+      setLocation((prev) => ({
+        ...prev,
+        lat,
+        lon,
+      }));
+      console.log(`lat: ${lat}, lon: ${lon}`);
+      setCordinates({ lat, lon });
+      reverseGeocode(cordinates.lat, cordinates.lon);
     }
   }
 
-  const reverseGeocode = async (lat: number, long: number) => {
+  const reverseGeocode = async (lat: number, lon: number) => {
     try {
       const res = await fetch(
-        `https://us1.locationiq.com/v1/reverse?key=${key}&lat=${lat}&lon=${long}&format=json&`
+        `https://us1.locationiq.com/v1/reverse?key=${key}&lat=${lat}&lon=${lon}&format=json&`
       );
       const data = await res.json();
 
-      setLocation(`${data.address.suburb}, ${data.address.road}`);
+      setLocation((prev) => ({
+        ...prev,
+        name: `${data.address.suburb}, ${data.address.road}`,
+      }));
 
       return data;
     } catch (error) {
@@ -62,10 +76,29 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const geocode = async (location: string) => {
+    const encodedValue = encodeURIComponent(location);
+
+    const res = await fetch(
+      `https://us1.locationiq.com/v1/search?key=${key}&q=${encodedValue}&format=json`
+    );
+    const data = await res.json();
+    console.log(data);
+    setLocation((prev) => ({
+      ...prev,
+      lat: data[0].lat,
+      lon: data[0].lon,
+    }));
+  };
+
+  useEffect(() => {
+    console.log(location);
+  }, [location]);
+
   const autoComplete = async (location: string) => {
     try {
       const res = await fetch(
-        `https://api.locationiq.com/v1/autocomplete?key=${key}&q=${location}&limit=5&dedupe=1&`
+        `https://api.locationiq.com/v1/autocomplete?key=${key}&q=${location}&limit=5&dedupe=1&countrycodes=gh&`
       );
 
       const data = await res.json();
@@ -82,12 +115,16 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    console.log(location);
+  }, [location]);
+
+  useEffect(() => {
     const stored = localStorage.getItem("location");
-    if (stored) setLocation(stored);
+    if (stored) setLocation(JSON.parse(stored));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("location", location);
+    localStorage.setItem("location", JSON.stringify(location));
   }, [location]);
 
   function errorCallback(error: GeolocationPositionError) {
@@ -114,6 +151,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         location,
         setLocation,
         findLocation,
+        geocode,
         autoComplete,
         addresses,
       }}

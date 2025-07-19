@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaWalking } from "react-icons/fa";
 import { MdOutlineDeliveryDining } from "react-icons/md";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import SchedulePopUp from "./SchedulePopUp";
-import { usePopUpContext } from "../../Context/PopUpContext";
-import { useScheduleContext } from "../../Context/ScheduleContext";
+import { usePopUpStore } from "../../stores/popUpStore";
 
 const DelivOrPickUp = ({
   deliveryMethod,
@@ -14,8 +13,14 @@ const DelivOrPickUp = ({
   setDeliveryMethod: (method: string) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { addPopUp, removePopUp } = usePopUpContext();
-  const { schedule } = useScheduleContext();
+  const { addPopUp, removePopUp } = usePopUpStore();
+  const [schedule, setSchedule] = useState("");
+
+  // useEffect(() => {
+  //   const stored = localStorage.getItem("slot");
+  //   if (stored) setSchedule(stored);
+  // }, []);
+
   return (
     <div className="px-4">
       {isOpen && (
@@ -28,7 +33,9 @@ const DelivOrPickUp = ({
           />
         </div>
       )}
-      <h1 className="text-xl font-bold sm:pt-0 pt-6 pb-2">Delivery or PickUp?</h1>
+      <h1 className="text-xl font-bold sm:pt-0 pt-6 pb-2">
+        Delivery or PickUp?
+      </h1>
       <div className="flex items-center gap-2 mb-2">
         <label
           className="flex items-center w-full gap-2 cursor-pointer"

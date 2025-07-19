@@ -1,8 +1,9 @@
-import { useAdminContext } from "../Context/AdminContext";
+import { useAdminStore } from "../stores/adminStore";
 import AdminSideBar from "./AdminSideBar";
 
 const CreateRole = () => {
-  const { newUser, setNewUser, handleCreateUser } = useAdminContext();
+  const { setNewUser, handleCreateUser } = useAdminStore();
+  const newUser = useAdminStore((state) => state.newUser);
 
   return (
     <div className="ml-65">

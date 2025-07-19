@@ -2,6 +2,7 @@ import { BiCheck, BiPhone } from "react-icons/bi";
 import { BsWhatsapp } from "react-icons/bs";
 import type { Order } from "../../Interfaces/Interfaces";
 import { motion } from "motion/react";
+import { NavLink } from "react-router";
 
 interface RiderCardProps {
   order: Order;
@@ -69,8 +70,17 @@ const RiderCard = ({ order, showActions = false }: RiderCardProps) => {
                 Address:
               </span>
               <p className="text-gray-100 text-sm sm:text-base break-words">
-                {order.address}
+                {order.location?.name ||
+                  (order as Order & { address?: string }).address ||
+                  "Address not available"}
               </p>
+              <NavLink
+                to={`/map/${encodeURIComponent(
+                  JSON.stringify(order.location)
+                )}`}
+              >
+                <p>View Route</p>
+              </NavLink>
             </div>
           </div>
         </div>

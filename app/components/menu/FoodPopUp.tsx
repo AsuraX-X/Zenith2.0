@@ -2,8 +2,11 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { BiMinus, BiPlus } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
-import { usePopUpContext } from "../../Context/PopUpContext";
-import { useCartContext } from "../../Context/CartContext";
+import {} from "../../Context/CartContext";
+import { useCartStore } from "../../stores/cartStore";
+import { usePopUpStore } from "../../stores/popUpStore";
+import { useUserStore } from "../../stores/userStore";
+import { useAuthStore } from "../../stores/authStore";
 
 const FoodPopUp = ({
   close,
@@ -22,12 +25,27 @@ const FoodPopUp = ({
   image: string;
   menuItemId: string;
 }) => {
-  const { cart, addToCart } = useCartContext();
+  const { addToCart } = useCartStore();
+  const cart = useCartStore((state) => state.cart);
+  const user = useUserStore((state) => state.user);
+  const { setAuth } = useAuthStore();
+  const { addPopUp, removePopUp } = usePopUpStore();
 
   const cartItem = cart.find((item) => item.menuItem._id === menuItemId);
   const [quantity, setQuantity] = useState(cartItem ? cartItem.quantity : 1);
 
-  const { removePopUp } = usePopUpContext();
+  const handleAddToCart = () => {
+    // Check if user is signed in
+    if (!user) {
+      setAuth("login");
+      addPopUp();
+      return;
+    }
+
+    addToCart(menuItemId, name, description, price, quantity);
+
+    close();
+  };
 
   return (
     <motion.div
@@ -38,7 +56,7 @@ const FoodPopUp = ({
         duration: 0.3,
         ease: "easeInOut",
       }}
-      className="relative h-3/4 w-1/2 rounded-t-lg bg-[#0e1113] overflow-hidden"
+      className="relative h-3/4 sm:w-1/2 w-full rounded-t-lg bg-[#0e1113] overflow-hidden"
     >
       <button
         className="absolute right-4 top-4 bg-white cursor-pointer rounded-lg p-1"
@@ -89,10 +107,7 @@ const FoodPopUp = ({
           <motion.button
             whileHover={{ scale: 1.02 }}
             className="flex w-full py-2 cursor-pointer bg-[#ff1200] justify-center items-center rounded-lg"
-            onClick={() => {
-              addToCart(close, name, description, price, menuItemId, quantity);
-              removePopUp();
-            }}
+            onClick={handleAddToCart}
           >
             Add to cart
           </motion.button>

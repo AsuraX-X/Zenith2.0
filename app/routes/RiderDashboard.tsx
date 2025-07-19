@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { useUser } from "../Context/UserContext";
 import { useNavigate } from "react-router";
 import RiderCard from "../components/Rider/RiderCard";
 import type { Order } from "../Interfaces/Interfaces";
+import { useUserStore } from "../stores/userStore";
 
 export default function RiderDashboard() {
-  const { user, setUser } = useUser();
+  const { setUser } = useUserStore();
+  const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
   const [currentOrders, setCurrentOrders] = useState<Order[]>([]);
   const [finishedOrders, setFinishedOrders] = useState<Order[]>([]);

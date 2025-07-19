@@ -91,7 +91,9 @@ const OrderCard = ({
                 Address:
               </span>
               <p className="text-gray-100 text-sm sm:text-base break-words">
-                {currentOrder.address}
+                {currentOrder.location?.name ||
+                  (currentOrder as Order & { address?: string }).address ||
+                  "Address not available"}
               </p>
             </div>
 

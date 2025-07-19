@@ -25,7 +25,11 @@ const FinishedDelivery = mongoose.model(
         },
       ],
       contact: String,
-      address: String,
+      location: {
+        name: String,
+        lat: Number,
+        lon: Number,
+      },
       riderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -61,6 +65,11 @@ const userSchema = new mongoose.Schema({
   resetTokenExpiry: Date,
 });
 
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 // Method to compare password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
@@ -529,24 +538,43 @@ app.post("/admin/create-user", async (req, res) => {
 });
 
 app.post("/order", async (req, res) => {
-  const { userId, userName, items, contact, address } = req.body;
+  const { userId, userName, items, contact, location } = req.body;
+  console.log("Received order data:", {
+    userId,
+    userName,
+    items,
+    contact,
+    location,
+  }); // Debug log
   try {
+    // Convert lat/lon strings to numbers if they exist
+    const processedLocation = location
+      ? {
+          ...location,
+          lat: parseFloat(location.lat),
+          lon: parseFloat(location.lon),
+        }
+      : location;
+
     const newOrder = new Order({
       userId,
       userName,
       items,
       contact,
-      address,
+      location: processedLocation,
       pending: "⌛ Pending Confirmation",
       confirmed: null,
       preparing: null,
       packing: null,
       outForDelivery: null,
     });
-    await newOrder.save();
-    res.json({ success: true, order: newOrder });
+    console.log("Creating order with data:", newOrder); // Debug log
+    const savedOrder = await newOrder.save();
+    console.log("Order saved successfully:", savedOrder); // Debug log
+    res.json({ success: true, order: savedOrder });
   } catch (error) {
-    Alert("Failed to save order:", error);
+    console.error("Failed to save order:", error);
+    console.error("Error details:", error.message);
     res.status(500).json({ success: false, error: "Order failed" });
   }
 });

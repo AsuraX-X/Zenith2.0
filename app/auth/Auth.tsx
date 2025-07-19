@@ -1,14 +1,15 @@
-import { useAuthContext } from "../Context/AuthContext";
 import Login from "./Login";
 import Register from "./Register";
 import { IoClose } from "react-icons/io5";
 import { motion } from "motion/react";
-import { usePopUpContext } from "../Context/PopUpContext";
+import { useAuthStore } from "../stores/authStore";
+import { usePopUpStore } from "../stores/popUpStore";
 
 const Auth = () => {
-  const { auth, setAuth } = useAuthContext();
+  const { setAuth } = useAuthStore();
+  const auth = useAuthStore((state) => state.authType);
 
-  const { removePopUp } = usePopUpContext();
+  const { removePopUp } = usePopUpStore();
 
   return (
     <motion.div

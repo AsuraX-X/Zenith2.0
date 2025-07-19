@@ -1,9 +1,9 @@
 import type { MenuItem } from "../../Interfaces/Interfaces";
-import { useAdminContext } from "../../Context/AdminContext";
 import { motion } from "motion/react";
+import { useAdminStore } from "../../stores/adminStore";
 
 const AdminMenuItemCard = ({ item }: { item: MenuItem }) => {
-  const { handleEditItem, handleDeleteItem } = useAdminContext();
+  const { handleEditItem, handleDeleteItem } = useAdminStore();
 
   return (
     <div className="border flex flex-col justify-between border-gray-600 bg-[#181c1f] rounded-lg overflow-hidden ">
@@ -33,14 +33,14 @@ const AdminMenuItemCard = ({ item }: { item: MenuItem }) => {
       </div>
       <div className="flex gap-2 mt-4 px-4 pb-4">
         <motion.button
-        whileHover={{backgroundColor:"#ff1200"}}
+          whileHover={{ backgroundColor: "#ff1200" }}
           onClick={() => handleEditItem(item)}
           className="flex-1 border border-[#ff1200] text-white py-2 rounded-lg"
         >
           Edit
         </motion.button>
         <motion.button
-        whileHover={{backgroundColor:"#ff1200"}}
+          whileHover={{ backgroundColor: "#ff1200" }}
           onClick={() => handleDeleteItem(item._id)}
           className="flex-1 border border-[#ff1200] py-2 rounded-lg"
         >

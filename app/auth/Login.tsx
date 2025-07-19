@@ -1,18 +1,18 @@
 import { motion } from "motion/react";
-import { useAuthContext } from "../Context/AuthContext";
-import { useUser } from "../Context/UserContext";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { login } from "../services/api";
-import { usePopUpContext } from "../Context/PopUpContext";
+import { usePopUpStore } from "../stores/popUpStore";
+import { useUserStore } from "../stores/userStore";
+import { useAuthStore } from "../stores/authStore";
 
 const Login = () => {
-  const { setAuth } = useAuthContext();
-  const { setUser } = useUser();
+  const { setAuth } = useAuthStore();
+  const { setUser } = useUserStore();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { removePopUp } = usePopUpContext();
+  const { removePopUp } = usePopUpStore();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

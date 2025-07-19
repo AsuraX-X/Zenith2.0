@@ -1,27 +1,32 @@
 import { useState } from "react";
-import { useAdminContext } from "../Context/AdminContext";
 import type { MenuItem } from "../Interfaces/Interfaces";
 import AdminSideBar from "./AdminSideBar";
 import AdminMenuItemCard from "../components/admin/AdminMenuItemCard";
+import { useAdminStore } from "../stores/adminStore";
+import { useRefreshMenuEffect } from "../hooks";
 
 const AdminMenuItems = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  useRefreshMenuEffect();
+
   const {
     addFilter,
-    formData,
     handleChangeEdit,
     handleChangeMenu,
     handleEditItem,
-    editItem,
     handleSubmit,
     handleUpdateItem,
-    menuItems,
-    message,
-    categories,
-    filter,
-    uniqueCategories,
-  } = useAdminContext();
+  } = useAdminStore();
+
+  // Use separate selectors to avoid creating new objects and infinite loops
+  const formData = useAdminStore((state) => state.formData);
+  const editItem = useAdminStore((state) => state.editItem);
+  const menuItems = useAdminStore((state) => state.menuItems);
+  const message = useAdminStore((state) => state.message);
+  const categories = useAdminStore((state) => state.categories);
+  const filter = useAdminStore((state) => state.filter);
+  const uniqueCategories = useAdminStore((state) => state.uniqueCategories);
 
   return (
     <div className="ml-65">

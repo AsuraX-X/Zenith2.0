@@ -1,5 +1,6 @@
 import { BiMinus, BiPlus, BiTrash } from "react-icons/bi";
-import { useCartContext } from "../../Context/CartContext";
+import {} from "../../Context/CartContext";
+import { useCartStore } from "../../stores/cartStore";
 
 const CartCard = ({
   name,
@@ -14,7 +15,7 @@ const CartCard = ({
   quantity: number;
   id: string;
 }) => {
-  const { updateQuantity, removeFromCart } = useCartContext();
+  const { updateQuantity, removeFromCart } = useCartStore();
 
   return (
     <div className="bg-[#181c1f] flex items-center justify-between gap-4 rounded-lg p-3 sm:p-4 border border-gray-600">
