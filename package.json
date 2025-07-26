@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "dotenvx run -- vite",
+    "dev": "dotenvx run -- vite --host",
     "start:backend": "pnpm --filter ./app/backend start",
     "start:dev": "concurrently \"pnpm start:backend\" \"pnpm run dev\" --names \"backend,frontend\" --prefix-colors \"cyan,magenta\"",
     "build": "tsc -b && vite build",

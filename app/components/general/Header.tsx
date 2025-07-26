@@ -15,7 +15,7 @@ const Header = () => {
   const { addPopUp } = usePopUpStore();
   const { setUser } = useUserStore();
   const user = useUserStore((state) => state.user);
-
+  const { clearCart } = useCartStore();
   const cart = useCartStore((state) => state.cart);
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -29,9 +29,8 @@ const Header = () => {
     { name: "ABOUT", path: "/about" },
     { name: "MENU", path: "/menu" },
     { name: "ORDERS", path: "/orders" },
-    user && user.role === "admin"
-      ? { name: "ADMIN", path: "/admin" }
-      : { name: "", path: "" },
+    user && user.role === "admin" ? { name: "ADMIN", path: "/admin" } : null,
+    user && user.role === "rider" ? { name: "RIDER", path: "/rider" } : null,
   ];
 
   useEffect(() => {
@@ -122,14 +121,19 @@ const Header = () => {
           </div>
           <div className="gap-2 sm:gap-4 flex justify-center flex-1">
             {routes
-              .filter((route) => route.path !== location.pathname)
-              .map((route) => (
-                <NavLink key={route.path} to={route.path}>
-                  <button className="cursor-pointer text-xs sm:text-sm font-medium hover:text-[#ff1200] transition">
-                    {route.name}
-                  </button>
-                </NavLink>
-              ))}
+              .filter(
+                (route) => route !== null && route.path !== location.pathname
+              )
+              .map(
+                (route) =>
+                  route && (
+                    <NavLink key={route.path} to={route.path}>
+                      <button className="cursor-pointer text-xs sm:text-sm font-medium hover:text-[#ff1200] transition">
+                        {route.name}
+                      </button>
+                    </NavLink>
+                  )
+              )}
           </div>
           <div className="flex justify-end flex-1">
             {user ? (
@@ -170,6 +174,7 @@ const Header = () => {
                       onClick={() => {
                         setUser(null);
                         navigate("/");
+                        clearCart()
                       }}
                       className="pt-2 text-left w-full hover:text-[#ff1200] transition"
                     >
@@ -215,29 +220,34 @@ const Header = () => {
         <div className="flex flex-col p-4 gap-4 ">
           {/* Navigation Links */}
           <div className="flex flex-col gap-3">
-            {routes.map((route) => (
-              <motion.div
-                key={route.path}
-                whileHover={{
-                  scale: 1.02,
-                  backgroundColor:
-                    location.pathname === route.path ? "#ff1200" : "#232426",
-                }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                animate={{
-                  backgroundColor:
-                    location.pathname === route.path ||
-                    (route.path === "/admin/orders" &&
-                      location.pathname === "/admin")
-                      ? "#ff1200"
-                      : "transparent",
-                }}
-                className="text-left py-2 px-3 rounded-lg"
-              >
-                <NavLink to={route.path}>{route.name}</NavLink>
-              </motion.div>
-            ))}
+            {routes.map(
+              (route) =>
+                route !== null && (
+                  <motion.div
+                    key={route?.path}
+                    whileHover={{
+                      scale: 1.02,
+                      backgroundColor:
+                        location.pathname === route?.path
+                          ? "#ff1200"
+                          : "#232426",
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                    animate={{
+                      backgroundColor:
+                        location.pathname === route?.path ||
+                        (route?.path === "/admin/orders" &&
+                          location.pathname === "/admin")
+                          ? "#ff1200"
+                          : "transparent",
+                    }}
+                    className="text-left py-2 px-3 rounded-lg"
+                  >
+                    <NavLink to={route?.path}>{route?.name}</NavLink>
+                  </motion.div>
+                )
+            )}
           </div>
 
           {/* User Section */}
@@ -250,6 +260,7 @@ const Header = () => {
               <button
                 onClick={() => {
                   setUser(null);
+                  clearCart()
                   navigate("/");
                   setIsMobileMenuOpen(false);
                 }}

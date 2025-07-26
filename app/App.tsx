@@ -9,9 +9,9 @@ import ResetPassword from "./auth/ResetPassword";
 import AdminMenuItems from "./admin/AdminMenuItems";
 import CreateRole from "./admin/CreateRole";
 import RiderDashboard from "./routes/RiderDashboard";
-import CustomerRoute from "./routes/CustomerRoute";
 import { useUserStore } from "./stores/userStore";
 import { usePopUpEffects, useUserEffects } from "./hooks";
+import About from "./routes/About";
 
 const App = () => {
   const user = useUserStore((state) => state.user);
@@ -22,6 +22,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/orders" element={<Orders />} />
@@ -38,7 +39,6 @@ const App = () => {
         <Route path="reset-password" element={<ResetPassword />} />
       </Route>
       <Route path="/rider" element={<RiderDashboard />} />
-      <Route path="/map/:location" element={<CustomerRoute />} />
     </Routes>
   );
 };

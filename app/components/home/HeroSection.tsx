@@ -15,18 +15,18 @@ const HeroSection = () => {
           <h1 className="text-7xl sm:text-8xl font-bold font-serif text-[#ff2100]">
             DE BLISS
           </h1>
-          <p className="sm:text-2xl text-xl font-bold mb-4">
+          <p className="sm:text-2xl text-xl font-bold mb-4 px-4 sm:px-0">
             Lorem ipsum dolor sit amet consectetur
           </p>
-          <div className="flex text-center gap-4">
+          <div className="flex text-center justify-between w-full px-4 sm:justify-start sm:px-0 sm:gap-4">
             <NavLink to="/menu">
-              <button className="w-34 py-2 rounded-lg bg-[#000000]  border border-[#ff2100] cursor-pointer">
+              <button className="w-38 py-2 rounded-lg bg-[#000000]  border border-[#ff2100] cursor-pointer">
                 SEE MENU
               </button>
             </NavLink>
             <button
               onClick={() => scrollToElement("contact")}
-              className="w-34 py-2 rounded-lg bg-[#000000]  border border-[#ff2100] cursor-pointer"
+              className="w-38 py-2 rounded-lg bg-[#000000]  border border-[#ff2100] cursor-pointer"
             >
               CONTACT US
             </button>

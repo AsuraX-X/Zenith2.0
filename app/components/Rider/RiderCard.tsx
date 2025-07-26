@@ -2,7 +2,6 @@ import { BiCheck, BiPhone } from "react-icons/bi";
 import { BsWhatsapp } from "react-icons/bs";
 import type { Order } from "../../Interfaces/Interfaces";
 import { motion } from "motion/react";
-import { NavLink } from "react-router";
 
 interface RiderCardProps {
   order: Order;
@@ -74,13 +73,14 @@ const RiderCard = ({ order, showActions = false }: RiderCardProps) => {
                   (order as Order & { address?: string }).address ||
                   "Address not available"}
               </p>
-              <NavLink
-                to={`/map/${encodeURIComponent(
-                  JSON.stringify(order.location)
-                )}`}
-              >
+                <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${order.location.lat},${order.location.lon}&travelmode=driving`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-2 text-[#ff1200] hover:text-[#d81b00] underline transition-colors duration-200"
+                >
                 <p>View Route</p>
-              </NavLink>
+                </a>
             </div>
           </div>
         </div>

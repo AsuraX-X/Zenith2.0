@@ -8,7 +8,6 @@ import type {
 } from "../Interfaces/Interfaces";
 
 interface adminState {
-  newUser: NewUser;
   message: string;
   formData: FormData;
   editItem: EditItem | null;
@@ -24,11 +23,11 @@ interface adminActions {
   // Menu management
   refreshMenu: () => Promise<void>;
   addFilter: (fil: string) => void;
-  
+
   // User management
-  setNewUser: (user: NewUser) => void;
-  handleCreateUser: () => Promise<void>;
-  
+  handleCreateUser: (newUser: NewUser) => Promise<void>;
+  clearUserForms: () => void;
+
   // Item management
   handleEditItem: (item: MenuItem | null) => void;
   handleDeleteItem: (id: string) => Promise<void>;
@@ -36,12 +35,12 @@ interface adminActions {
   handleChangeEdit: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleChangeMenu: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
-  
+
   // Orders management
   setActiveOrders: (orders: Order[]) => void;
   setFinishedOrders: (orders: Order[]) => void;
   fetchOrders: () => Promise<void>;
-  
+
   // Utility
   setMessage: (message: string) => void;
 }
@@ -50,12 +49,6 @@ type adminStore = adminState & adminActions;
 
 export const useAdminStore = create<adminStore>((set, get) => ({
   // Initial state
-  newUser: {
-    name: "",
-    password: "",
-    phone: "",
-    role: "rider",
-  },
   message: "",
   formData: {
     name: "",
@@ -79,7 +72,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
       const uniqueTypes = Array.from(
         new Set(data.map((item: MenuItem) => item.category))
       ) as string[];
-      
+
       set(() => ({
         menuItems: data,
         categories: uniqueTypes,
@@ -94,13 +87,13 @@ export const useAdminStore = create<adminStore>((set, get) => ({
   addFilter: (fil: string) => {
     const { filter, categories } = get();
     let newFilter: string[];
-    
+
     if (filter.includes(fil)) {
       newFilter = filter.filter((item) => fil !== item);
     } else {
       newFilter = [...filter, fil];
     }
-    
+
     set(() => ({
       filter: newFilter,
       uniqueCategories: newFilter.length > 0 ? newFilter : categories,
@@ -108,19 +101,27 @@ export const useAdminStore = create<adminStore>((set, get) => ({
   },
 
   // User management
-  setNewUser: (user: NewUser) => {
-    set(() => ({ newUser: user }));
-  },
 
-  handleCreateUser: async () => {
-    const { newUser } = get();
-    
-    if (!newUser.name || !newUser.password || !newUser.role) {
+  handleCreateUser: async (newUser: NewUser) => {
+    if (!newUser.name || !newUser.email || !newUser.password || !newUser.role) {
       alert("Please fill in all fields");
       return;
     }
 
+    // Additional validation
+    if (newUser.password.length < 6) {
+      alert("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (!newUser.email.includes("@")) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
     try {
+      console.log("Creating user:", newUser); // Debug log
+
       const res = await fetch("/api/admin/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,16 +131,27 @@ export const useAdminStore = create<adminStore>((set, get) => ({
       const data = await res.json();
       if (data.success) {
         alert(`${newUser.role} created successfully`);
-        set(() => ({
-          newUser: { name: "", password: "", phone: "", role: "rider" },
-        }));
+        // Optionally clear forms on success
+        // get().clearUserForms();
       } else {
-        alert("Creation failed: " + data.error);
+        // Better error handling for specific error codes
+        if (res.status === 409) {
+          alert(
+            `User already exists! A user with the name "${newUser.name}" or email "${newUser.email}" is already registered in the system.`
+          );
+        } else {
+          alert("Creation failed: " + data.error);
+        }
       }
     } catch (err) {
       console.error("Create user error:", err);
       alert("Request failed");
     }
+  },
+
+  clearUserForms: () => {
+    // This would be called from the component after successful creation
+    // Components will handle their own state clearing
   },
 
   // Item management
@@ -149,13 +161,13 @@ export const useAdminStore = create<adminStore>((set, get) => ({
 
   handleDeleteItem: async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
-    
+
     try {
       const res = await fetch(`/api/admin/delete-menu-item/${id}`, {
         method: "DELETE",
       });
       const result = await res.json();
-      
+
       if (result.success) {
         alert("Item deleted");
         get().refreshMenu();
@@ -233,7 +245,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
   handleChangeMenu: (e: React.ChangeEvent<HTMLInputElement>) => {
     const { formData } = get();
     const { name, value, files } = e.target;
-    
+
     if (name === "image" && files) {
       set(() => ({ formData: { ...formData, image: files[0] } }));
     } else {

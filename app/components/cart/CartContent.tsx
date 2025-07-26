@@ -9,34 +9,38 @@ import { useCartStore } from "../../stores/cartStore";
 import { motion } from "motion/react";
 import { useLocationStore } from "../../stores/locationStore";
 import { useUserStore } from "../../stores/userStore";
+import { useButtonAnimationStore } from "../../stores/buttonAnimationStore";
 
 const CartContent = () => {
   const user = useUserStore((state) => state.user);
+
   const navigate = useNavigate();
+
   const [isOpen, setIsOpen] = useState(false);
+
   const [deliveryMethod, setDeliveryMethod] = useState<string>("delivery");
 
   const [contact, setContact] = useState(user?.phone || "");
 
-  // Use Zustand store instead of CartContext
+  const { setAnimation } = useButtonAnimationStore();
+  const animation = useButtonAnimationStore((state) => state.animation);
+
   const { clearCart } = useCartStore();
 
-  const cart = useCartStore((state) => state.cart || []); // Single selector for cart
+  const cart = useCartStore((state) => state.cart || []);
 
-  // Calculate total in component to avoid infinite loops
   const total = cart.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
     0
   );
 
-  // Get location store functions once
   const { findLocation, geocode, setLocation, autoComplete } =
     useLocationStore();
 
-  // Use separate selectors to avoid creating new objects
   const location = useLocationStore(
     (state) => state.location ?? { name: "", lat: 0, lon: 0 }
   );
+
   const addresses = useLocationStore((state) => state.addresses ?? []);
 
   const handler = useRef<NodeJS.Timeout | null>(null);
@@ -236,6 +240,7 @@ const CartContent = () => {
                   <div className="flex shrink-0">
                     <button
                       onClick={() => {
+                        setAnimation("my location");
                         try {
                           if (findLocation) {
                             findLocation();
@@ -244,9 +249,24 @@ const CartContent = () => {
                           console.error("Error finding location:", error);
                         }
                       }}
-                      className="bg-[#181c1f] border border-[#23272b] py-2 px-4 rounded-lg cursor-pointer"
+                      className="bg-[#181c1f] gap-1 flex justify-center items-center border border-[#23272b] h-[42px] w-35 rounded-lg cursor-pointer"
                     >
-                      Use my location
+                      {animation === "my location"
+                        ? Array.from({ length: 3 }).map((_, i) => (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: [0, 1, 1, 0] }}
+                              transition={{
+                                delay: i / 3,
+                                duration: 1,
+                                repeat: Infinity,
+                                repeatDelay: 0.5,
+                              }}
+                              key={i}
+                              className="size-4 bg-[#ff1200] rounded-full"
+                            />
+                          ))
+                        : "Use my location"}
                     </button>
                   </div>
                 </div>

@@ -1,13 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router";
 import RiderCard from "../components/Rider/RiderCard";
 import type { Order } from "../Interfaces/Interfaces";
 import { useUserStore } from "../stores/userStore";
+import Header from "../components/general/Header";
 
 export default function RiderDashboard() {
-  const { setUser } = useUserStore();
   const user = useUserStore((state) => state.user);
-  const navigate = useNavigate();
   const [currentOrders, setCurrentOrders] = useState<Order[]>([]);
   const [finishedOrders, setFinishedOrders] = useState<Order[]>([]);
   const [view, setView] = useState("current");
@@ -50,20 +48,10 @@ export default function RiderDashboard() {
   }, [user, fetchOrders]);
 
   return (
-    <div className="min-h-screen bg-[#0e1113] p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => {
-              setUser(null);
-              navigate("/");
-            }}
-            className="px-4 py-2 rounded-lg bg-[#ff1200] text-white hover:bg-[#d81b00] transition"
-          >
-            Logout
-          </button>
-        </div>
-        <h2 className="text-3xl font-bold text-center mb-8 text-white">
+    <div className="bg-[#0e1113] mt-20">
+      <Header />
+      <div className="flex flex-col items-center">
+        <h2 className="text-3xl font-bold mb-8">
           Rider Dashboard
         </h2>
 
@@ -92,7 +80,7 @@ export default function RiderDashboard() {
           </div>
         </div>
 
-        <section>
+        <section className="w-full sm:px-20 px-6">
           {view === "current" ? (
             currentOrders.length === 0 ? (
               <div className="text-center py-12">

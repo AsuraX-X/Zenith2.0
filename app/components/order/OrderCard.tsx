@@ -2,7 +2,7 @@ import { BsWhatsapp } from "react-icons/bs";
 import type { Order } from "../../Interfaces/Interfaces";
 import { BiCheck, BiPhone } from "react-icons/bi";
 import { motion } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const OrderCard = ({
   order,
@@ -14,6 +14,126 @@ const OrderCard = ({
   onOrderUpdate?: (updatedOrder: Order) => void;
 }) => {
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
+  const [time, setTime] = useState(0);
+
+  const key = import.meta.env.VITE_LOCATIONIQ_KEY;
+  const RESTAURANT_LON = -0.16507375965959975;
+  const RESTAURANT_LAT = 5.677069742918279;
+
+  // Get stored delivery time from localStorage
+  const getStoredDeliveryTime = useCallback(
+    (orderId: string): number | null => {
+      try {
+        const stored = localStorage.getItem(`deliveryTime_${orderId}`);
+        if (!stored) return null;
+
+        try {
+          // Try to parse as new format with timestamp
+          const data = JSON.parse(stored);
+          if (typeof data === "object" && data.time !== undefined) {
+            return data.time;
+          }
+          // Fallback for old format (just number)
+          return typeof data === "number" ? data : null;
+        } catch {
+          // If parsing fails, try as old format (plain number string)
+          const numValue = parseInt(stored, 10);
+          return isNaN(numValue) ? null : numValue;
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error);
+        return null;
+      }
+    },
+    []
+  );
+
+  // Store delivery time in localStorage with timestamp
+  const storeDeliveryTime = useCallback(
+    (orderId: string, deliveryTime: number) => {
+      try {
+        const data = {
+          time: deliveryTime,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem(`deliveryTime_${orderId}`, JSON.stringify(data));
+      } catch (error) {
+        console.error("Error storing to localStorage:", error);
+      }
+    },
+    []
+  );
+
+  // Clean up old delivery times (older than 24 hours)
+  const cleanupOldDeliveryTimes = useCallback(() => {
+    try {
+      const now = Date.now();
+      const oneDayMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("deliveryTime_")) {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            try {
+              const data = JSON.parse(stored);
+              if (now - data.timestamp > oneDayMs) {
+                localStorage.removeItem(key);
+                console.log(`Cleaned up old delivery time: ${key}`);
+              }
+            } catch {
+              // If data is in old format (just number), remove it
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error cleaning up localStorage:", error);
+    }
+  }, []);
+
+  const getTime = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `https://us1.locationiq.com/v1/matrix/driving/${RESTAURANT_LON},${RESTAURANT_LAT};${order.location.lon},${order.location.lat}?key=${key}`
+      );
+
+      const data = await response.json();
+
+      let calculatedTime;
+      if (data.durations[0][1] > data.durations[1][0]) {
+        calculatedTime = Math.ceil(data.durations[0][1] / 60);
+      } else {
+        calculatedTime = Math.ceil(data.durations[1][0] / 60);
+      }
+
+      setTime(calculatedTime);
+      // Store the calculated time in localStorage
+      storeDeliveryTime(order._id, calculatedTime);
+
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [
+    key,
+    order.location?.lat,
+    order.location?.lon,
+    order._id,
+    RESTAURANT_LAT,
+    RESTAURANT_LON,
+    storeDeliveryTime,
+  ]);
+
+  useEffect(() => {
+    console.log(time);
+  }, [time]);
+
+  // Cleanup old delivery times on component mount
+  useEffect(() => {
+    cleanupOldDeliveryTimes();
+  }, [cleanupOldDeliveryTimes]);
 
   // Poll for order updates every 10 seconds
   useEffect(() => {
@@ -39,6 +159,28 @@ const OrderCard = ({
   useEffect(() => {
     setCurrentOrder(order);
   }, [order]);
+
+  // Load delivery time from localStorage or calculate it
+  useEffect(() => {
+    if (order.location?.lat && order.location?.lon) {
+      // First, check if we have a stored delivery time
+      const storedTime = getStoredDeliveryTime(order._id);
+
+      if (storedTime !== null) {
+        // Use stored time if available
+        setTime(storedTime);
+        console.log(
+          `Using stored delivery time for order ${order._id}: ${storedTime} mins`
+        );
+      } else if (time === 0) {
+        // Only make API call if no stored time and current time is 0
+        console.log(
+          `No stored time found for order ${order._id}, calculating...`
+        );
+        getTime();
+      }
+    }
+  }, [order.location, order._id, time, getTime, getStoredDeliveryTime]);
 
   const steps = [
     { key: "confirmed", label: "Order Confirmed" },
@@ -108,6 +250,15 @@ const OrderCard = ({
               </p>
             </div>
 
+            <div className="pb-4">
+              <span className="font-semibold text-gray-300 text-sm sm:text-base">
+                Estimated Delivery Time:
+              </span>
+              <p className="text-gray-100 text-sm sm:text-base">
+                {time > 0 ? `${time + 15} mins` : "Calculating..."}
+              </p>
+            </div>
+
             {currentOrder.riderId && currentOrder.riderId.phone && (
               <div>
                 <span className="font-semibold text-gray-300 text-sm sm:text-base">
@@ -134,7 +285,7 @@ const OrderCard = ({
           </div>
         </div>
 
-        <div className="mt-4 md:mt-0">
+        <div>
           <h4 className="font-semibold text-base sm:text-lg mb-2 sm:mb-3 text-[#ff1200]">
             Order Items:
           </h4>

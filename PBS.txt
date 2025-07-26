@@ -1,0 +1,331 @@
+DCIT 208 - SOFTWARE ENGINEERING
+PRODUCT BACKLOG SPECIFICATION
+De Bliss Food Hub Team
+
+===============================================
+1. USER STORY REFINEMENT
+===============================================
+
+Epic ID | Original Epic | Derived User Story IDs
+--------|---------------|----------------------
+E1      | User Authentication & Account Management | US-1, US-2, US-3, US-4
+E2      | Menu Management & Food Ordering | US-5, US-6, US-7, US-8, US-9
+E3      | Location Services & Delivery | US-10, US-11, US-12, US-13
+E4      | Order Tracking & Management | US-14, US-15, US-16, US-17
+E5      | Admin Dashboard & Analytics | US-18, US-19, US-20, US-21
+E6      | Rider Management System | US-22, US-23, US-24, US-25
+
+===============================================
+2. SIZING & PRIORITISATION
+===============================================
+
+Estimation Method: Planning Poker with Fibonacci Scale (1, 2, 3, 5, 8, 13)
+
+Total Backlog Points: 142 points
+Sprint Velocity Assumption: 21 points per sprint (5-day sprint)
+Estimated Project Duration: 7 sprints
+
+Priority Legend: H = High, M = Medium, L = Low
+
+===============================================
+3. UP-TO-DATE STORY LIST
+===============================================
+
+US-1: Customer Registration (Priority: H, Points: 5)
+Description: As a customer, I want to register with username, email, and password
+Preconditions: User has access to the application
+Postconditions: User account created, verification email sent, user can login
+
+US-2: Customer Login (Priority: H, Points: 3)
+Description: As a customer, I want to login with username/email and password
+Preconditions: User has registered account
+Postconditions: User is authenticated and redirected to main menu
+
+US-3: Admin User Creation (Priority: H, Points: 5)
+Description: As an admin, I want to create admin and rider accounts
+Preconditions: User has admin privileges
+Postconditions: New admin/rider account created with role assignments
+
+US-4: Real-time Username Availability (Priority: M, Points: 3)
+Description: As a customer, I want to see if my chosen username is available in real-time
+Preconditions: User is on registration page
+Postconditions: Username availability status displayed immediately
+
+US-5: Browse Menu Categories (Priority: H, Points: 5)
+Description: As a customer, I want to view food items organized by categories
+Preconditions: User is logged in, menu items exist in database
+Postconditions: Menu displayed with categories, items, prices, and images
+
+US-6: Add Items to Cart (Priority: H, Points: 8)
+Description: As a customer, I want to add food items to my cart with quantities
+Preconditions: User viewing menu, items available
+Postconditions: Items added to cart, cart total updated, can proceed to checkout
+
+US-7: Menu Search and Filter (Priority: M, Points: 5)
+Description: As a customer, I want to search and filter menu items
+Preconditions: Menu items loaded
+Postconditions: Filtered results displayed based on search criteria
+
+US-8: View Item Details (Priority: M, Points: 3)
+Description: As a customer, I want to see detailed information about menu items
+Preconditions: Menu items available
+Postconditions: Item details modal displayed with description, price, ingredients
+
+US-9: Checkout Process (Priority: H, Points: 8)
+Description: As a customer, I want to complete my order with contact and location info
+Preconditions: Items in cart, user authenticated
+Postconditions: Order placed, payment processed, confirmation received
+
+US-10: GPS Location Detection (Priority: H, Points: 8)
+Description: As a customer, I want the app to detect my current location automatically
+Preconditions: User grants location permission
+Postconditions: Current location detected, address populated, delivery area validated
+
+US-11: Address Autocomplete (Priority: M, Points: 5)
+Description: As a customer, I want address suggestions as I type my delivery location
+Preconditions: LocationIQ API integration active
+Postconditions: Address suggestions displayed, user can select from dropdown
+
+US-12: Delivery Time Estimation (Priority: H, Points: 8)
+Description: As a customer, I want to see estimated delivery time for my location
+Preconditions: Customer location set, restaurant location configured
+Postconditions: Accurate delivery time displayed, cached for future orders
+
+US-13: Delivery Area Validation (Priority: M, Points: 5)
+Description: As a customer, I want to know if delivery is available to my location
+Preconditions: Customer location entered
+Postconditions: Delivery availability confirmed or alternative suggested
+
+US-14: Real-time Order Tracking (Priority: H, Points: 13)
+Description: As a customer, I want to track my order status in real-time
+Preconditions: Order placed successfully
+Postconditions: Order progress displayed with live updates (confirmed, preparing, packing, out for delivery)
+
+US-15: Order History (Priority: M, Points: 5)
+Description: As a customer, I want to view my previous orders
+Preconditions: User has placed orders before
+Postconditions: Order history displayed with details and reorder option
+
+US-16: Order Status Updates (Priority: H, Points: 8)
+Description: As a rider, I want to update order status during delivery
+Preconditions: Rider assigned to order, authenticated as rider
+Postconditions: Order status updated, customer notified of progress
+
+US-17: Mark Order Complete (Priority: H, Points: 3)
+Description: As a customer, I want to confirm order delivery completion
+Preconditions: Order marked as delivered by rider
+Postconditions: Order marked as finished, payment finalized
+
+US-18: Admin Dashboard Overview (Priority: H, Points: 8)
+Description: As an admin, I want to see overview of orders, sales, and system status
+Preconditions: Admin authenticated
+Postconditions: Dashboard displaying key metrics, active orders, revenue data
+
+US-19: Menu Item Management (Priority: H, Points: 8)
+Description: As an admin, I want to add, edit, and delete menu items
+Preconditions: Admin privileges, access to admin panel
+Postconditions: Menu items updated, changes reflected on customer interface
+
+US-20: Order Management (Priority: H, Points: 8)
+Description: As an admin, I want to view and manage all orders
+Preconditions: Admin authenticated
+Postconditions: Order list displayed, can assign riders, update status
+
+US-21: Price Management (Priority: M, Points: 5)
+Description: As an admin, I want to update menu item prices
+Preconditions: Admin access, menu items exist
+Postconditions: Prices updated across system, customers see new prices
+
+US-22: Rider Dashboard (Priority: H, Points: 8)
+Description: As a rider, I want to see my assigned deliveries
+Preconditions: Rider authenticated, orders assigned
+Postconditions: Delivery list displayed with customer details and locations
+
+US-23: Rider Location Tracking (Priority: M, Points: 8)
+Description: As a rider, I want customers to track my location during delivery
+Preconditions: Rider on active delivery, GPS enabled
+Postconditions: Real-time location shared with customer
+
+US-24: Navigation Integration (Priority: M, Points: 5)
+Description: As a rider, I want to open delivery location in maps app
+Preconditions: Delivery assigned, customer location available
+Postconditions: Navigation app opened with destination set
+
+US-25: Delivery Completion (Priority: H, Points: 5)
+Description: As a rider, I want to mark deliveries as completed
+Preconditions: Rider at delivery location, order delivered
+Postconditions: Order marked delivered, customer notified, rider available for next delivery
+
+===============================================
+4. SPRINT-1 PLANNING (August 2-6, 2025)
+===============================================
+
+Sprint-1 Target: 47 points (≈ ⅓ of total backlog)
+
+Selected Stories for Sprint-1:
+- US-1: Customer Registration (5 points)
+- US-2: Customer Login (3 points)
+- US-3: Admin User Creation (5 points)
+- US-5: Browse Menu Categories (5 points)
+- US-6: Add Items to Cart (8 points)
+- US-9: Checkout Process (8 points)
+- US-10: GPS Location Detection (8 points)
+- US-18: Admin Dashboard Overview (8 points)
+
+Total Sprint-1 Points: 50 points
+
+Justification for Selection:
+1. DEPENDENCIES: Authentication (US-1, US-2) must come first as foundation
+2. MVP VALUE: Core ordering flow (US-5, US-6, US-9) provides immediate customer value
+3. LOCATION FOUNDATION: US-10 enables delivery functionality for future sprints
+4. ADMIN CAPABILITY: US-18 allows order management from day one
+
+Sprint-1 Demo Capabilities:
+At the end of Sprint-1, users will be able to:
+- Register and login to the application
+- Browse the restaurant menu with categories
+- Add items to cart and place orders
+- Use GPS to set delivery location
+- Admins can view orders and system overview
+- Complete end-to-end ordering process (MVP)
+
+===============================================
+5. DESIGN SKETCHES & UI WIREFRAMES
+===============================================
+
+LOGIN/REGISTRATION SCREEN:
+┌─────────────────────────────┐
+│ [De Bliss Logo]             │
+│                             │
+│ ┌─────────────────────────┐ │
+│ │ Username/Email          │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Password                │ │
+│ └─────────────────────────┘ │
+│                             │
+│ [LOGIN BUTTON]              │
+│ Don't have account? Sign Up │
+└─────────────────────────────┘
+
+Components: Header, Form inputs, Button, Navigation link
+Interactions: Form validation, Login/Register toggle
+Accessibility: High contrast colors, keyboard navigation, screen reader labels
+
+MENU BROWSING SCREEN:
+┌─────────────────────────────┐
+│ [Header] [Cart(2)] [Profile]│
+│ ┌─[Starters]─[Mains]─[etc]┐ │
+│ │                         │ │
+│ │ ┌─────┐ ┌─────┐ ┌─────┐ │ │
+│ │ │[IMG]│ │[IMG]│ │[IMG]│ │ │
+│ │ │Item │ │Item │ │Item │ │ │
+│ │ │$5.99│ │$8.99│ │$6.99│ │ │
+│ │ │ [+] │ │ [+] │ │ [+] │ │ │
+│ │ └─────┘ └─────┘ └─────┘ │ │
+│ └─────────────────────────┘ │
+└─────────────────────────────┘
+
+Components: Category tabs, Product cards, Add to cart buttons
+Interactions: Category filtering, Add to cart, View details
+Accessibility: Alt text for images, focus indicators, touch targets 44px minimum
+
+CHECKOUT SCREEN:
+┌─────────────────────────────┐
+│ ORDER SUMMARY               │
+│ ┌─────────────────────────┐ │
+│ │ 2x Jollof Rice    $11.98│ │
+│ │ 1x Grilled Chicken $8.99│ │
+│ │ Delivery Fee       $2.00│ │
+│ │ Total:           $22.97 │ │
+│ └─────────────────────────┘ │
+│                             │
+│ DELIVERY DETAILS            │
+│ ┌─────────────────────────┐ │
+│ │ [GPS] Auto-detect       │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Phone Number            │ │
+│ └─────────────────────────┘ │
+│                             │
+│ [PLACE ORDER - $22.97]      │
+└─────────────────────────────┘
+
+Components: Order summary, Location picker, Contact form, Payment button
+Interactions: GPS location, Address autocomplete, Order submission
+Accessibility: Clear pricing display, large touch targets, error messaging
+
+ADMIN DASHBOARD:
+┌─────────────────────────────┐
+│ DE BLISS ADMIN DASHBOARD    │
+│ ┌─────┐ ┌─────┐ ┌─────┐    │
+│ │$2.1K│ │ 45  │ │ 12  │    │
+│ │Sales│ │Order│ │Rider│    │
+│ └─────┘ └─────┘ └─────┘    │
+│                             │
+│ ACTIVE ORDERS               │
+│ ┌─────────────────────────┐ │
+│ │ #001 John D. Preparing  │ │
+│ │ #002 Jane S. Packing    │ │
+│ │ #003 Mike J. Delivery   │ │
+│ └─────────────────────────┘ │
+│                             │
+│ [Manage Menu] [View Reports]│
+└─────────────────────────────┘
+
+Components: Metrics cards, Order list, Action buttons
+Interactions: Order status updates, Quick actions, Navigation
+Accessibility: High contrast for status indicators, keyboard shortcuts
+
+ORDER TRACKING SCREEN:
+┌─────────────────────────────┐
+│ ORDER #12345                │
+│                             │
+│ ┌●─●─○─○┐ Estimated: 25min  │
+│ │Confirmed│                 │
+│ │Preparing│                 │
+│ │ Packing │                 │
+│ │Delivery │                 │
+│ └─────────┘                 │
+│                             │
+│ DELIVERY TO:                │
+│ 123 Main St, Accra          │
+│                             │
+│ RIDER: John Smith           │
+│ Phone: +233 XX XXX XXXX     │
+│                             │
+│ [TRACK RIDER] [CALL RIDER]  │
+└─────────────────────────────┘
+
+Components: Progress indicator, Address display, Rider info, Action buttons
+Interactions: Live status updates, Contact rider, Location tracking
+Accessibility: Clear progress indication, accessible contact options
+
+ACCESSIBILITY CONSIDERATIONS:
+1. Color contrast ratio minimum 4.5:1 for text
+2. Touch targets minimum 44px for mobile
+3. Keyboard navigation support for all interactive elements
+4. Screen reader compatibility with proper ARIA labels
+5. Focus indicators for all clickable elements
+6. Alternative text for all images
+7. Error messages clearly associated with form fields
+8. Consistent navigation structure across screens
+
+===============================================
+TECHNICAL IMPLEMENTATION NOTES
+===============================================
+
+Tech Stack: React, TypeScript, Node.js, MongoDB, LocationIQ API
+State Management: Zustand stores for user, menu, location, and admin data
+Authentication: JWT tokens with role-based access control
+Real-time Updates: WebSocket connections for order tracking
+Responsive Design: Mobile-first approach with Tailwind CSS
+
+DevSecOps Integration:
+- Story IDs (US-XX) included in all commit messages
+- GitHub Projects board with columns: Backlog → In Progress → Review → Done
+- Automated testing for critical user flows
+- Security scanning for authentication and payment flows
+
+This backlog provides a comprehensive foundation for building De Bliss Food Hub 
+with clear user value, technical feasibility, and accessibility considerations.

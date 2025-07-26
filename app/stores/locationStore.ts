@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { location } from "../Interfaces/Interfaces";
 import { persist } from "zustand/middleware";
+import { useButtonAnimationStore } from "./buttonAnimationStore";
 
 type address = {
   suburb: string;
@@ -63,6 +64,8 @@ export const useLocationStore = create<locationStore>()(
       },
 
       reverseGeoCode: async (lat: number, lon: number) => {
+        const { setAnimation } = useButtonAnimationStore.getState();
+
         try {
           const res = await fetch(
             `https://us1.locationiq.com/v1/reverse?key=${key}&lat=${lat}&lon=${lon}&format=json&`
@@ -77,8 +80,10 @@ export const useLocationStore = create<locationStore>()(
               name: `${data.address.suburb}, ${data.address.road}`,
             },
           }));
+          setAnimation("");
         } catch (error) {
           console.error(error);
+          setAnimation("");
         }
       },
 
@@ -92,7 +97,7 @@ export const useLocationStore = create<locationStore>()(
                 location: { ...state.location, lat, lon },
                 coordinates: { lat, lon },
               }));
-              console.log(`lat: ${lat}, lon: ${lon}`);
+              console.log(` lat: ${lat}, lon: ${lon}`);
               get().reverseGeoCode(lat, lon);
             },
             errorCallback

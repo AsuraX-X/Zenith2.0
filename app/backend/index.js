@@ -125,6 +125,39 @@ app.post("/admin/create-menu-item", async (req, res) => {
   }
 });
 
+// Check username availability endpoint
+app.post("/check-username", async (req, res) => {
+  const { username } = req.body;
+
+  if (!username || username.length < 3) {
+    return res.status(400).json({
+      success: false,
+      error: "Username must be at least 3 characters",
+    });
+  }
+
+  try {
+    // Check if username exists (case-insensitive)
+    const existingUser = await User.findOne({
+      name: { $regex: new RegExp("^" + username + "$", "i") },
+    });
+
+    res.json({
+      success: true,
+      available: !existingUser,
+      message: existingUser
+        ? "Username is already taken"
+        : "Username is available",
+    });
+  } catch (error) {
+    console.error("Username check error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error while checking username",
+    });
+  }
+});
+
 // ROUTES
 app.post("/signup", async (req, res) => {
   const { name, email, password, phone } = req.body;
@@ -134,7 +167,13 @@ app.post("/signup", async (req, res) => {
       .json({ success: false, error: "All fields are required" });
   }
   try {
-    const existing = await User.findOne({ $or: [{ email }, { name }] });
+    // Check for existing users (case-insensitive)
+    const existing = await User.findOne({
+      $or: [
+        { email: { $regex: new RegExp("^" + email + "$", "i") } },
+        { name: { $regex: new RegExp("^" + name + "$", "i") } },
+      ],
+    });
     if (existing) {
       return res
         .status(409)
@@ -164,13 +203,26 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   const { identifier, password } = req.body;
+  console.log("Login attempt:", { identifier, password: "***" }); // Debug log
 
   try {
+    // Make login case-insensitive for better UX
     const user = await User.findOne({
-      $or: [{ email: identifier }, { name: identifier }],
+      $or: [
+        { email: { $regex: new RegExp("^" + identifier + "$", "i") } },
+        { name: { $regex: new RegExp("^" + identifier + "$", "i") } },
+      ],
     });
 
+    console.log(
+      "User found:",
+      user
+        ? { name: user.name, email: user.email, role: user.role }
+        : "No user found"
+    ); // Debug log
+
     if (!user || !(await user.matchPassword(password))) {
+      console.log("Password match failed"); // Debug log
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
@@ -508,22 +560,24 @@ app.post("/admin/create-user", async (req, res) => {
   }
 
   try {
-    // Check if user already exists by name or email
-    const existing = await User.findOne({ $or: [{ email }, { name }] });
+    // Check if user already exists by name or email (case-insensitive)
+    const existing = await User.findOne({
+      $or: [
+        { email: { $regex: new RegExp("^" + email + "$", "i") } },
+        { name: { $regex: new RegExp("^" + name + "$", "i") } },
+      ],
+    });
     if (existing) {
       return res
         .status(409)
         .json({ success: false, error: "User already exists" });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create and save new user
+    // Create and save new user (password will be hashed by pre-save hook)
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      password, // Don't hash here - let the pre-save hook handle it
       phone,
       role, // "admin" or "rider"
     });

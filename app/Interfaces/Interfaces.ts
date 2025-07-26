@@ -100,6 +100,7 @@ export interface cartItem {
 
 export interface NewUser {
   name: string;
+  email: string;
   password: string;
   phone: string;
   role: string;
