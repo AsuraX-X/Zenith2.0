@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet";
 import Auth from "../auth/Auth";
 import Header from "../components/general/Header";
 import FullMenu from "../components/menu/FullMenu";
+import Footer from "../components/general/Footer";
 
 const Menu = () => {
   return (
@@ -13,6 +14,7 @@ const Menu = () => {
       <Auth />
       <Header />
       <FullMenu />
+      <Footer />
     </div>
   );
 };

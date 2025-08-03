@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { location } from "../Interfaces/Interfaces";
 import { persist } from "zustand/middleware";
-import { useButtonAnimationStore } from "./buttonAnimationStore";
+import { useAnimationStore } from "./animationStore";
 
 type address = {
   suburb: string;
@@ -64,7 +64,7 @@ export const useLocationStore = create<locationStore>()(
       },
 
       reverseGeoCode: async (lat: number, lon: number) => {
-        const { setAnimation } = useButtonAnimationStore.getState();
+        const { setAnimation } = useAnimationStore.getState();
 
         try {
           const res = await fetch(

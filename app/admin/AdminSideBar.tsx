@@ -5,6 +5,7 @@ const AdminSideBar = () => {
   const routes = [
     { name: "Order", path: "/admin/orders" },
     { name: "Menu Items", path: "/admin/menu" },
+    { name: "Reservations", path: "/admin/reservations" },
     { name: "Roles", path: "/admin/roles" },
   ];
 
@@ -16,7 +17,13 @@ const AdminSideBar = () => {
       <div className="flex-1 flex flex-col">
         <div className="px-2 flex flex-col gap-2 flex-1">
           {routes.map((route) => (
-            <NavLink key={route.path} to={route.path}>
+            <NavLink
+              onClick={() => {
+                window.scrollTo(0, 0);
+              }}
+              key={route.path}
+              to={route.path}
+            >
               <motion.div
                 whileHover={{
                   scale: 1.02,
@@ -45,7 +52,13 @@ const AdminSideBar = () => {
           ))}
         </div>
 
-        <NavLink className="w-full" to="/">
+        <NavLink
+          onClick={() => {
+            window.scrollTo(0, 0);
+          }}
+          className="w-full"
+          to="/"
+        >
           <motion.div
             whileHover={{ backgroundColor: "#ff1200" }}
             className="text-left py-2 px-5"

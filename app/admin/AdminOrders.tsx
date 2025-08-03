@@ -4,12 +4,15 @@ import AdminOrderCard from "../components/admin/AdminOrderCard";
 import type { Rider } from "../Interfaces/Interfaces";
 import { motion } from "motion/react";
 import { useAdminStore } from "../stores/adminStore";
+import { useAnimationStore } from "../stores/animationStore";
 
 export default function AdminOrders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [view, setView] = useState("current");
 
   const { fetchOrders } = useAdminStore();
+
+  const animation = useAnimationStore((state) => state.animation);
 
   // Use separate selectors to avoid creating new objects
   const activeOrders = useAdminStore((state) => state.activeOrders);
@@ -92,33 +95,49 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        <section>
-          {view === "current" ? (
-            activeOrders.length === 0 ? (
+        {animation !== "order error" ? (
+          <section>
+            {view === "current" ? (
+              activeOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-xl text-gray-600">
+                    No current orders found.
+                  </p>
+                </div>
+              ) : (
+                activeOrders.map((order) => (
+                  <AdminOrderCard
+                    order={order}
+                    riders={riders}
+                    showActions={true}
+                  />
+                ))
+              )
+            ) : finishedOrders.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-xl text-gray-600">
-                  No current orders found.
+                  No finished orders found.
                 </p>
               </div>
             ) : (
-              activeOrders.map((order) => (
-                <AdminOrderCard
-                  order={order}
-                  riders={riders}
-                  showActions={true}
-                />
+              finishedOrders.map((order) => (
+                <AdminOrderCard order={order} riders={riders} />
               ))
-            )
-          ) : finishedOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-xl text-gray-600">No finished orders found.</p>
+            )}
+          </section>
+        ) : (
+          <div className="h-[65vh] flex justify-center items-center gap-2">
+            <div className="flex justify-center items-center flex-col gap-4">
+              <p className="text-3xl text-gray-400">Error loading orders</p>
+              <button
+                className="bg-[#ff1200] rounded-lg px-4 py-2 cursor-pointer"
+                onClick={fetchOrders}
+              >
+                Retry
+              </button>
             </div>
-          ) : (
-            finishedOrders.map((order) => (
-              <AdminOrderCard order={order} riders={riders} />
-            ))
-          )}
-        </section>
+          </div>
+        )}
       </div>
     </div>
   );

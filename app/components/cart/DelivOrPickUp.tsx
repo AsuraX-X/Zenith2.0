@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { FaWalking } from "react-icons/fa";
 import { MdOutlineDeliveryDining } from "react-icons/md";
 import { RiCalendarScheduleLine } from "react-icons/ri";
@@ -14,7 +14,7 @@ const DelivOrPickUp = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { addPopUp, removePopUp } = usePopUpStore();
-  const [schedule, setSchedule] = useState("");
+  const [schedule] = useState("");
 
   // useEffect(() => {
   //   const stored = localStorage.getItem("slot");

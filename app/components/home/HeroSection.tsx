@@ -4,7 +4,7 @@ const HeroSection = () => {
   const scrollToElement = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView();
+      el.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -19,7 +19,12 @@ const HeroSection = () => {
             Lorem ipsum dolor sit amet consectetur
           </p>
           <div className="flex text-center justify-between w-full px-4 sm:justify-start sm:px-0 sm:gap-4">
-            <NavLink to="/menu">
+            <NavLink
+              onClick={() => {
+                window.scrollTo(0, 0);
+              }}
+              to="/menu"
+            >
               <button className="w-38 py-2 rounded-lg bg-[#000000]  border border-[#ff2100] cursor-pointer">
                 SEE MENU
               </button>

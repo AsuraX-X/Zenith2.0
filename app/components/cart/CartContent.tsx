@@ -9,7 +9,7 @@ import { useCartStore } from "../../stores/cartStore";
 import { motion } from "motion/react";
 import { useLocationStore } from "../../stores/locationStore";
 import { useUserStore } from "../../stores/userStore";
-import { useButtonAnimationStore } from "../../stores/buttonAnimationStore";
+import { useAnimationStore } from "../../stores/animationStore";
 
 const CartContent = () => {
   const user = useUserStore((state) => state.user);
@@ -22,8 +22,8 @@ const CartContent = () => {
 
   const [contact, setContact] = useState(user?.phone || "");
 
-  const { setAnimation } = useButtonAnimationStore();
-  const animation = useButtonAnimationStore((state) => state.animation);
+  const { setAnimation } = useAnimationStore();
+  const animation = useAnimationStore((state) => state.animation);
 
   const { clearCart } = useCartStore();
 
@@ -131,7 +131,12 @@ const CartContent = () => {
                   </div>
                 ))}
               </div>
-              <NavLink to="/menu">
+              <NavLink
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                }}
+                to="/menu"
+              >
                 <div className="flex cursor-pointer items-center py-4 border-y border-y-gray-500 mt-4 gap-2 px-4">
                   <BiPlusCircle size={25} color="#ff2100" />
                   <p>Add more</p>
@@ -304,7 +309,12 @@ const CartContent = () => {
       ) : (
         <div className="py-12 h-[75vh] flex items-center justify-center flex-col ">
           <p className="text-xl text-gray-600">Your cart is empty.</p>
-          <NavLink to="/menu">
+          <NavLink
+            onClick={() => {
+              window.scrollTo(0, 0);
+            }}
+            to="/menu"
+          >
             <button className="mt-4 bg-[#ff2100] text-white px-6 py-3 rounded-lg hover:bg-[#d81b00] transition">
               Browse Menu
             </button>

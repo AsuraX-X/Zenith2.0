@@ -5,6 +5,7 @@ import Header from "../components/general/Header";
 import About from "../components/home/About";
 import HeroSection from "../components/home/HeroSection";
 import ShortMenu from "../components/home/ShortMenu";
+import Reservation from "../components/home/Reservation";
 
 export default function Home() {
 
@@ -19,6 +20,7 @@ export default function Home() {
       <Header />
       <HeroSection />
       <ShortMenu />
+      <Reservation/>
       <About />
       <Footer />
     </div>

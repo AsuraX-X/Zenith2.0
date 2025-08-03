@@ -1,16 +1,16 @@
 import { create } from "zustand";
 
 interface animationActions {
-  setAnimation: (animatin: string) => void;
+  setAnimation: (animation: string) => void;
 }
 
 interface animationState {
   animation: string;
 }
 
-type buttonAnimationStore = animationActions & animationState;
+type animationStore = animationActions & animationState;
 
-export const useButtonAnimationStore = create<buttonAnimationStore>()(
+export const useAnimationStore = create<animationStore>()(
   (set) => ({
     animation: "",
 

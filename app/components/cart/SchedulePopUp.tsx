@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import {  useMemo, useState } from "react";
 import { BiChevronDown } from "react-icons/bi";
 
 const OPEN_TIME = 10; // 10:00 AM

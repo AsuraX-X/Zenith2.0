@@ -6,6 +6,7 @@ import type {
   NewUser,
   Order,
 } from "../Interfaces/Interfaces";
+import { useAnimationStore } from "./animationStore";
 
 interface adminState {
   message: string;
@@ -47,6 +48,8 @@ interface adminActions {
 
 type adminStore = adminState & adminActions;
 
+const { setAnimation } = useAnimationStore.getState();
+
 export const useAdminStore = create<adminStore>((set, get) => ({
   // Initial state
   message: "",
@@ -78,9 +81,11 @@ export const useAdminStore = create<adminStore>((set, get) => ({
         categories: uniqueTypes,
         uniqueCategories: uniqueTypes,
       }));
+      setAnimation("");
     } catch (error) {
       console.error("Failed to refresh menu:", error);
       set(() => ({ message: "Failed to load menu items" }));
+      setAnimation("menu error");
     }
   },
 
@@ -331,12 +336,15 @@ export const useAdminStore = create<adminStore>((set, get) => ({
         activeOrders: Array.isArray(activeData) ? activeData : [],
         finishedOrders: Array.isArray(finishedData) ? finishedData : [],
       }));
+
+      setAnimation("");
     } catch (err) {
       console.error("Failed to fetch orders", err);
       set(() => ({
         activeOrders: [],
         finishedOrders: [],
       }));
+      setAnimation("order error");
     }
   },
 

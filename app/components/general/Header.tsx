@@ -28,7 +28,7 @@ const Header = () => {
     { name: "HOME", path: "/" },
     { name: "ABOUT", path: "/about" },
     { name: "MENU", path: "/menu" },
-    { name: "ORDERS", path: "/orders" },
+    user ? { name: "ORDERS", path: "/orders" } : null,
     user && user.role === "admin" ? { name: "ADMIN", path: "/admin" } : null,
     user && user.role === "rider" ? { name: "RIDER", path: "/rider" } : null,
   ];
@@ -82,7 +82,12 @@ const Header = () => {
       >
         {/* Mobile Layout */}
         <div className="flex sm:hidden w-full items-center justify-between">
-          <NavLink to="/">
+          <NavLink
+            onClick={() => {
+              window.scrollTo(0, 0);
+            }}
+            to="/"
+          >
             <span className=" font-serif text-[#ff2100] font-bold">
               DE BLISS
             </span>
@@ -93,7 +98,12 @@ const Header = () => {
                 <div className="bg-[#ff1200] rounded-full absolute size-3 flex justify-center items-center right-[-5%] top-[-10%] z-10">
                   <p className="text-xs leading-none">{cart.length}</p>
                 </div>
-                <NavLink to="/cart">
+                <NavLink
+                  onClick={() => {
+                    window.scrollTo(0, 0);
+                  }}
+                  to="/cart"
+                >
                   <button className="cursor-pointer flex items-center py-1 px-2 border border-[#ff1200] rounded-lg bg-[#0e1113]">
                     <FiShoppingCart size={16} />
                   </button>
@@ -113,7 +123,12 @@ const Header = () => {
         {/* Desktop Layout */}
         <div className="hidden sm:flex w-full items-center">
           <div className="flex justify-start flex-1">
-            <NavLink to="/">
+            <NavLink
+              onClick={() => {
+                window.scrollTo(0, 0);
+              }}
+              to="/"
+            >
               <span className=" font-serif text-[#ff2100] font-bold">
                 DE BLISS
               </span>
@@ -127,7 +142,13 @@ const Header = () => {
               .map(
                 (route) =>
                   route && (
-                    <NavLink key={route.path} to={route.path}>
+                    <NavLink
+                      onClick={() => {
+                        window.scrollTo(0, 0);
+                      }}
+                      key={route.path}
+                      to={route.path}
+                    >
                       <button className="cursor-pointer text-xs sm:text-sm font-medium hover:text-[#ff1200] transition">
                         {route.name}
                       </button>
@@ -143,7 +164,12 @@ const Header = () => {
                     <div className="bg-[#ff1200] rounded-full absolute size-3 sm:size-4 flex justify-center items-center right-[-5%] top-[-10%] z-10">
                       <p className="text-xs leading-none">{cart.length}</p>
                     </div>
-                    <NavLink to="/cart">
+                    <NavLink
+                      onClick={() => {
+                        window.scrollTo(0, 0);
+                      }}
+                      to="/cart"
+                    >
                       <button className="cursor-pointer flex items-center py-1 px-2 sm:py-2 sm:px-4 border border-[#ff1200] rounded-lg gap-1 sm:gap-2 bg-[#0e1113] text-xs sm:text-sm">
                         <FiShoppingCart size={16} className="sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">Cart</span>
@@ -174,7 +200,7 @@ const Header = () => {
                       onClick={() => {
                         setUser(null);
                         navigate("/");
-                        clearCart()
+                        clearCart();
                       }}
                       className="pt-2 text-left w-full hover:text-[#ff1200] transition"
                     >
@@ -244,7 +270,14 @@ const Header = () => {
                     }}
                     className="text-left py-2 px-3 rounded-lg"
                   >
-                    <NavLink to={route?.path}>{route?.name}</NavLink>
+                    <NavLink
+                      onClick={() => {
+                        window.scrollTo(0, 0);
+                      }}
+                      to={route?.path}
+                    >
+                      {route?.name}
+                    </NavLink>
                   </motion.div>
                 )
             )}
@@ -260,7 +293,7 @@ const Header = () => {
               <button
                 onClick={() => {
                   setUser(null);
-                  clearCart()
+                  clearCart();
                   navigate("/");
                   setIsMobileMenuOpen(false);
                 }}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthContext } from "../Context/AuthContext";
 import { usePopUpStore } from "../stores/popUpStore";
+import { useAuthStore } from "../stores/authStore";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");

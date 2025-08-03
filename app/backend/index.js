@@ -8,6 +8,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const Order = require("./models/Order");
+const Reservation = require("./models/Reservation");
 const FinishedDelivery = mongoose.model(
   "FinishedDelivery",
   new mongoose.Schema(
@@ -902,6 +903,234 @@ app.post("/user/mark-finished", async (req, res) => {
   } catch (err) {
     console.error("Error in mark-finished:", err);
     res.status(500).json({ error: "Failed to move order to finished" });
+  }
+});
+
+// RESERVATION ENDPOINTS
+
+// Create a new reservation
+app.post("/reservation", async (req, res) => {
+  try {
+    const {
+      numberOfTables,
+      chairsPerTable,
+      reservationDate,
+      reservationTime,
+      wholeRestaurant,
+      customerName,
+      customerEmail,
+      customerPhone,
+      specialRequests,
+      userId,
+    } = req.body;
+
+    // Validation
+    if (
+      !customerName ||
+      !customerEmail ||
+      !customerPhone ||
+      !reservationDate ||
+      !reservationTime
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid email format",
+      });
+    }
+
+    // Date validation (must be future date)
+    const selectedDate = new Date(reservationDate + "T" + reservationTime);
+    const now = new Date();
+    if (selectedDate <= now) {
+      return res.status(400).json({
+        success: false,
+        error: "Reservation must be for a future date and time",
+      });
+    }
+
+    // Check if the time slot is already booked (for whole restaurant bookings)
+    if (wholeRestaurant) {
+      const existingReservation = await Reservation.findOne({
+        reservationDate,
+        reservationTime,
+        wholeRestaurant: true,
+        status: { $in: ["pending", "confirmed"] },
+      });
+
+      if (existingReservation) {
+        return res.status(400).json({
+          success: false,
+          error: "Whole restaurant is already booked for this time slot",
+        });
+      }
+    }
+
+    // Calculate total guests
+    let totalGuests;
+    if (wholeRestaurant) {
+      totalGuests = 100; // Assume whole restaurant capacity
+    } else {
+      totalGuests = numberOfTables * chairsPerTable;
+    }
+
+    // Create reservation
+    const reservation = new Reservation({
+      numberOfTables: wholeRestaurant ? 0 : numberOfTables,
+      chairsPerTable: wholeRestaurant ? 0 : chairsPerTable,
+      reservationDate,
+      reservationTime,
+      wholeRestaurant,
+      customerName,
+      customerEmail,
+      customerPhone,
+      specialRequests: specialRequests || "",
+      totalGuests,
+      userId: userId || null,
+    });
+
+    await reservation.save();
+
+    res.json({
+      success: true,
+      message: "Reservation created successfully",
+      reservationId: reservation._id,
+      reservation: {
+        id: reservation._id,
+        numberOfTables: reservation.numberOfTables,
+        chairsPerTable: reservation.chairsPerTable,
+        reservationDate: reservation.reservationDate,
+        reservationTime: reservation.reservationTime,
+        wholeRestaurant: reservation.wholeRestaurant,
+        customerName: reservation.customerName,
+        customerEmail: reservation.customerEmail,
+        totalGuests: reservation.totalGuests,
+        status: reservation.status,
+        createdAt: reservation.createdAt,
+      },
+    });
+  } catch (err) {
+    console.error("Error creating reservation:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to create reservation",
+    });
+  }
+});
+
+// Get all reservations (admin endpoint)
+app.get("/admin/reservations", async (req, res) => {
+  try {
+    const reservations = await Reservation.find()
+      .sort({ createdAt: -1 })
+      .populate("userId", "name email");
+
+    res.json({
+      success: true,
+      reservations,
+    });
+  } catch (err) {
+    console.error("Error fetching reservations:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch reservations",
+    });
+  }
+});
+
+// Get reservations by user ID
+app.get("/user/reservations/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reservations = await Reservation.find({ userId }).sort({
+      createdAt: -1,
+    });
+
+    res.json({
+      success: true,
+      reservations,
+    });
+  } catch (err) {
+    console.error("Error fetching user reservations:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch user reservations",
+    });
+  }
+});
+
+// Update reservation status (admin endpoint)
+app.post("/admin/reservation-status", async (req, res) => {
+  try {
+    const { reservationId, status } = req.body;
+
+    if (!["pending", "confirmed", "cancelled", "completed"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid status",
+      });
+    }
+
+    const reservation = await Reservation.findByIdAndUpdate(
+      reservationId,
+      { status },
+      { new: true }
+    );
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        error: "Reservation not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Reservation status updated successfully",
+      reservation,
+    });
+  } catch (err) {
+    console.error("Error updating reservation status:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update reservation status",
+    });
+  }
+});
+
+// Get reservation by ID
+app.get("/reservation/:id", async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id).populate(
+      "userId",
+      "name email"
+    );
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        error: "Reservation not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      reservation,
+    });
+  } catch (err) {
+    console.error("Error fetching reservation:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch reservation",
+    });
   }
 });
 

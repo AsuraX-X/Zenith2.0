@@ -32,7 +32,12 @@ const ShortMenu = () => {
         Signature dishes for every taste - from classic recipies to bold
         culinary experiments
       </p>
-      <NavLink to="/menu">
+      <NavLink
+        onClick={() => {
+          window.scrollTo(0, 0);
+        }}
+        to="/menu"
+      >
         <button className="px-4 py-2 mb-4 sm:mb-2 rounded-lg border border-[#ff1200] w-fit cursor-pointer text-sm sm:text-base hover:bg-[#ff1200] transition">
           View more
         </button>

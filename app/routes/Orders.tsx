@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet";
 import Header from "../components/general/Header";
 import OrderContent from "../components/order/OrderContent";
+import Footer from "../components/general/Footer";
 
 const Orders = () => {
   return (
@@ -11,6 +12,7 @@ const Orders = () => {
       </Helmet>
       <Header />
       <OrderContent />
+      <Footer />
     </div>
   );
 };

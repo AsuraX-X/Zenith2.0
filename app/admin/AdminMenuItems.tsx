@@ -4,11 +4,13 @@ import AdminSideBar from "./AdminSideBar";
 import AdminMenuItemCard from "../components/admin/AdminMenuItemCard";
 import { useAdminStore } from "../stores/adminStore";
 import { useRefreshMenuEffect } from "../hooks";
+import { useAnimationStore } from "../stores/animationStore";
 
 const AdminMenuItems = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   useRefreshMenuEffect();
+  const { refreshMenu } = useAdminStore();
 
   const {
     addFilter,
@@ -27,6 +29,7 @@ const AdminMenuItems = () => {
   const categories = useAdminStore((state) => state.categories);
   const filter = useAdminStore((state) => state.filter);
   const uniqueCategories = useAdminStore((state) => state.uniqueCategories);
+  const animation = useAnimationStore((state) => state.animation);
 
   return (
     <div className="ml-65">
@@ -124,29 +127,47 @@ const AdminMenuItems = () => {
               </div>
             )}
           </div>
-          {menuItems.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-xl text-gray-400">No menu items found.</p>
+          {animation === "menu error" ? (
+            <div className="h-[65vh] flex justify-center items-center gap-2">
+              <div className="flex justify-center items-center flex-col gap-4">
+                <p className="text-3xl text-gray-400">Error loading menu</p>
+                <button
+                  className="bg-[#ff1200] rounded-lg px-4 py-2 cursor-pointer"
+                  onClick={refreshMenu}
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="space-y-12">
-              {uniqueCategories.map((category, i) => (
-                <div
-                  className="bg-[#0e1113] rounded-xl border border-gray-600 shadow-sm p-6"
-                  key={i}
-                >
-                  <h3 className="text-xl font-bold border-b-2 border-b-[#ff1200] pb-2 mb-6 text-white">
-                    {category.toUpperCase()}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {menuItems
-                      .filter((item: MenuItem) => item.category === category)
-                      .map((item) => (
-                        <AdminMenuItemCard item={item} key={item._id} />
-                      ))}
-                  </div>
+            <div>
+              {menuItems.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-xl text-gray-400">No menu items found.</p>
                 </div>
-              ))}
+              ) : (
+                <div className="space-y-12">
+                  {uniqueCategories.map((category, i) => (
+                    <div
+                      className="bg-[#0e1113] rounded-xl border border-gray-600 shadow-sm p-6"
+                      key={i}
+                    >
+                      <h3 className="text-xl font-bold border-b-2 border-b-[#ff1200] pb-2 mb-6 text-white">
+                        {category.toUpperCase()}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {menuItems
+                          .filter(
+                            (item: MenuItem) => item.category === category
+                          )
+                          .map((item) => (
+                            <AdminMenuItemCard item={item} key={item._id} />
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

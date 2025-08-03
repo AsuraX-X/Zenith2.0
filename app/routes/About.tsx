@@ -349,7 +349,12 @@ const About = () => {
             Experience the same warmth and delicious flavors that started Mrs.
             Ester's journey
           </p>
-          <NavLink to="/menu">
+          <NavLink
+            onClick={() => {
+              window.scrollTo(0, 0);
+            }}
+            to="/menu"
+          >
             <button className="bg-[#ff1200] px-8 py-3 rounded-lg font-bold">
               Order Your First Meal
             </button>

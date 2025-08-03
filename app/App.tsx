@@ -12,6 +12,8 @@ import RiderDashboard from "./routes/RiderDashboard";
 import { useUserStore } from "./stores/userStore";
 import { usePopUpEffects, useUserEffects } from "./hooks";
 import About from "./routes/About";
+import Reservation from "./routes/Reservation";
+import AdminReservations from "./admin/AdminReservations";
 
 const App = () => {
   const user = useUserStore((state) => state.user);
@@ -20,26 +22,30 @@ const App = () => {
   useUserEffects();
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/orders" element={<Orders />} />
-      {user && user?.role === "admin" && (
-        <Route path="/admin">
-          <Route index element={<AdminOrders />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="menu" element={<AdminMenuItems />} />
-          <Route path="roles" element={<CreateRole />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/reservation" element={<Reservation />} />
+        {user && user?.role === "admin" && (
+          <Route path="/admin">
+            <Route index element={<AdminOrders />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="menu" element={<AdminMenuItems />} />
+            <Route path="roles" element={<CreateRole />} />
+            <Route path="reservations" element={<AdminReservations />} />
+          </Route>
+        )}
+        <Route path="/auth">
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
         </Route>
-      )}
-      <Route path="/auth">
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password" element={<ResetPassword />} />
-      </Route>
-      <Route path="/rider" element={<RiderDashboard />} />
-    </Routes>
+        <Route path="/rider" element={<RiderDashboard />} />
+      </Routes>
+    </>
   );
 };
 

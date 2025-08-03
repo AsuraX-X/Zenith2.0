@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import FoodCard from "./FoodCard";
 import { BiFilter } from "react-icons/bi";
 import { motion } from "motion/react";
@@ -11,6 +11,7 @@ const FullMenu = () => {
   const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
   const [filter, setFilter] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [status, setStatus] = useState("");
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -32,23 +33,27 @@ const FullMenu = () => {
     };
   }, [isOpen]);
 
+  const fetchMenu = useCallback(async () => {
+    setStatus("load menu");
+    try {
+      const res = await fetch("/api/menu");
+      const data: MenuItem[] = await res.json();
+      setMenuItems(data);
+      const uniqueTypes = Array.from(
+        new Set(data.map((item: MenuItem) => item.category))
+      );
+      setCategories(uniqueTypes);
+      setUniqueCategories(uniqueTypes);
+      setStatus("");
+    } catch (err) {
+      console.error("Failed to load menu", err);
+      setStatus("error");
+    }
+  }, [setStatus]);
+
   useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const res = await fetch("/api/menu");
-        const data: MenuItem[] = await res.json();
-        setMenuItems(data);
-        const uniqueTypes = Array.from(
-          new Set(data.map((item: MenuItem) => item.category))
-        );
-        setCategories(uniqueTypes);
-        setUniqueCategories(uniqueTypes);
-      } catch (err) {
-        console.error("Failed to load menu", err);
-      }
-    };
     fetchMenu();
-  }, []);
+  }, [fetchMenu]);
 
   const addFilter = (fil: string) => {
     if (filter.includes(fil)) {
@@ -133,17 +138,41 @@ const FullMenu = () => {
           ))
         ) : (
           <div className="h-[65vh] flex justify-center items-center gap-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <motion.div
-                animate={{ y: [0, 20, 0] }}
-                transition={{
-                  repeat: Infinity,
-                  delay: i / 4,
-                }}
-                className="size-7 rounded-full bg-[#ff1200]"
-                key={i}
-              />
-            ))}
+            {status === "load menu" && (
+              <div className="flex items-center flex-col justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    ease: "linear",
+                    repeat: Infinity,
+                    duration: 1,
+                  }}
+                  className="size-10 flex justify-center items-center border-[#ff1200] border-r-transparent rounded-full border-2"
+                >
+                  <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{
+                      ease: "linear",
+                      repeat: Infinity,
+                      duration: 0.7,
+                    }}
+                    className="size-8 border-[#ff1200] border-r-transparent rounded-full border-2"
+                  />
+                </motion.div>
+                <p className="text-xl text-gray-300">Loading menu...</p>
+              </div>
+            )}
+            {status === "error" && (
+              <div className="flex justify-center items-center flex-col gap-4">
+                <p className="text-3xl text-gray-400">Error loading menu</p>
+                <button
+                  className="bg-[#ff1200] rounded-lg px-4 py-2 cursor-pointer"
+                  onClick={fetchMenu}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
