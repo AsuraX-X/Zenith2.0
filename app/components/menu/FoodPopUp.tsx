@@ -2,7 +2,6 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { BiMinus, BiPlus } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
-import {} from "../../Context/CartContext";
 import { useCartStore } from "../../stores/cartStore";
 import { usePopUpStore } from "../../stores/popUpStore";
 import { useUserStore } from "../../stores/userStore";

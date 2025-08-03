@@ -2,7 +2,6 @@ import { NavLink, useLocation, useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BiChevronDown, BiUserCircle, BiMenu, BiX } from "react-icons/bi";
-import {} from "../../Context/CartContext";
 import { FiShoppingCart } from "react-icons/fi";
 import { useCartStore } from "../../stores/cartStore";
 import { useUserStore } from "../../stores/userStore";
