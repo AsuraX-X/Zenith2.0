@@ -1,5 +1,4 @@
 import { BiMinus, BiPlus, BiTrash } from "react-icons/bi";
-import {} from "../../Context/CartContext";
 import { useCartStore } from "../../stores/cartStore";
 
 const CartCard = ({
