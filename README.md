@@ -13,6 +13,7 @@ A modern full-stack restaurant application built with React, TypeScript, and Nod
 ## 🛠 Tech Stack
 
 **Frontend:**
+
 - React 18 + TypeScript
 - Vite for fast development and building
 - Tailwind CSS for styling
@@ -21,6 +22,7 @@ A modern full-stack restaurant application built with React, TypeScript, and Nod
 - React Icons for iconography
 
 **Backend:**
+
 - Node.js + Express
 - MongoDB with Mongoose ODM
 - JWT Authentication
@@ -34,11 +36,6 @@ Zenith/
 │   ├── App.tsx              # Main app component
 │   ├── main.tsx             # React entry point
 │   ├── admin/               # Admin dashboard components
-│   │   ├── AdminMenuItems.tsx
-│   │   ├── AdminOrders.tsx
-│   │   ├── AdminReservations.tsx
-│   │   ├── AdminSideBar.tsx
-│   │   └── CreateRole.tsx
 │   ├── auth/                # Authentication components
 │   ├── backend/             # Node.js backend
 │   ├── components/          # Reusable UI components
@@ -53,31 +50,34 @@ Zenith/
 
 ## 🔧 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PNPM package manager
 - MongoDB database
 
 ## ⚙️ Environment Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd Zenith
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Environment Variables**
-   
+
    Create a `.env` file in the root directory:
+
    ```env
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret
    ```
-   
+
    Create a `.env` file in the `app/backend/` directory with your MongoDB connection string.
 
 ## 🚀 Development
@@ -85,6 +85,7 @@ Zenith/
 **Start both frontend and backend:**
 
 On Windows (PowerShell):
+
 ```powershell
 ./start-dev.ps1
 ```
@@ -92,11 +93,13 @@ On Windows (PowerShell):
 **Or run separately:**
 
 Frontend (Vite dev server):
+
 ```bash
 pnpm dev
 ```
 
 Backend (Node.js server):
+
 ```bash
 cd app/backend
 node index.js
@@ -124,13 +127,15 @@ pnpm preview
 ## 🔒 User Roles
 
 The application supports three user roles:
+
 - **User**: Browse menu, place orders, make reservations
-- **Admin**: Full access to dashboard and management features  
+- **Admin**: Full access to dashboard and management features
 - **Rider**: Delivery management and tracking
 
 ## 🎨 Styling
 
 The application uses a dark theme with:
+
 - Primary background: `#0e1113`
 - Accent color: `#ff1200` (red)
 - Modern gradients and animations
@@ -139,6 +144,7 @@ The application uses a dark theme with:
 ## 📋 Available Scripts
 
 Check [package.json](package.json) for all available scripts:
+
 - `pnpm dev` - Start development server
 - `pnpm build` - Build for production
 - `pnpm preview` - Preview production build

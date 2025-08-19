@@ -23,13 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-app/backend/.env.keys
 .env.keys
-
-app/examples
-
-app/Context
-
-app/backend/reset-users.js
-
-txt
