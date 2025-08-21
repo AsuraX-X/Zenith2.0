@@ -31,7 +31,7 @@ const FoodCard = ({ menuItem }: { menuItem: MenuItem }) => {
         )}
       </AnimatePresence>
       <div className="size-40 shrink-0 bg-gray-600">
-        <img src={menuItem.image} alt={menuItem.name} />
+        <img src={menuItem.image} alt={menuItem.name} className="w-full h-full object-cover" />
       </div>
       <div className="flex flex-col sm:flex-row gap-2 w-full justify-center sm:justify-between sm:items-center">
         <div>

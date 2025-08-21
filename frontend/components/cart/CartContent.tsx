@@ -3,7 +3,7 @@ import CartCard from "./CartCard";
 import { NavLink, useNavigate } from "react-router";
 import DelivOrPickUp from "./DelivOrPickUp";
 import { LuMapPin } from "react-icons/lu";
-import { useState, useRef, type ChangeEvent } from "react";
+import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import { type cartItem } from "../../Interfaces/Interfaces";
 import { useCartStore } from "../../stores/cartStore";
 import { motion } from "motion/react";
@@ -11,9 +11,11 @@ import { useLocationStore } from "../../stores/locationStore";
 import { useUserStore } from "../../stores/userStore";
 import { useAnimationStore } from "../../stores/animationStore";
 import { usePopUpStore } from "../../stores/popUpStore";
+import { useScheduleStore } from "../../stores/scheduleStore";
 
 const CartContent = () => {
   const user = useUserStore((state) => state.user);
+  const { scheduledTime, scheduledDate, clearSchedule } = useScheduleStore();
 
   const { addAlert, setAlertAction } = usePopUpStore();
 
@@ -28,6 +30,8 @@ const CartContent = () => {
   const { setAnimation } = useAnimationStore();
 
   const animation = useAnimationStore((state) => state.animation);
+
+  const popUpCount = usePopUpStore((state) => state.popUpCount);
 
   const { clearCart } = useCartStore();
 
@@ -47,7 +51,28 @@ const CartContent = () => {
 
   const addresses = useLocationStore((state) => state.addresses ?? []);
 
-  const handler = useRef<NodeJS.Timeout | null>(null);
+  const handler = useRef<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicks outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const fetchPossibleLocation = (e: ChangeEvent<HTMLInputElement>) => {
     try {
@@ -77,6 +102,24 @@ const CartContent = () => {
         return;
       }
 
+      // Prepare scheduled time data
+      let scheduleData: {
+        scheduledTime: string;
+        scheduledDate: string;
+        scheduledFor: string;
+      } | null = null;
+      if (scheduledTime && scheduledDate) {
+        scheduleData = {
+          scheduledTime,
+          scheduledDate: scheduledDate.toISOString(),
+          scheduledFor: `${scheduledDate.toLocaleDateString(undefined, {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+          })} at ${scheduledTime}`,
+        };
+      }
+
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,14 +134,19 @@ const CartContent = () => {
           contact,
           location,
           deliveryMethod,
+          schedule: scheduleData, // Include schedule data
         }),
       });
 
       const result = await res.json();
       if (result.success) {
-        addAlert("Order confirmed!");
+        const alertMessage = scheduleData
+          ? `Order scheduled for ${scheduleData.scheduledFor}!`
+          : "Order confirmed!";
+        addAlert(alertMessage);
         setAlertAction(() => {
           clearCart();
+          clearSchedule(); // Clear the schedule after successful order
           navigate("/orders");
         });
       } else {
@@ -127,14 +175,15 @@ const CartContent = () => {
           <div className="lg:pr-12">
             <section>
               <div className="flex flex-col gap-4">
-                {cart.map((item: cartItem) => (
-                  <div key={item.menuItem._id}>
+                {cart.map((item) => (
+                  <div key={item.uniqueId}>
                     <CartCard
-                      id={item.menuItem._id}
+                      id={item.uniqueId}
                       description={item.menuItem.description}
                       name={item.menuItem.name}
                       price={item.menuItem.price.toFixed(2)}
                       quantity={item.quantity}
+                      accompaniments={item.accompaniments}
                     />
                   </div>
                 ))}
@@ -174,10 +223,42 @@ const CartContent = () => {
                 </p>
               </div>
             </section>
+
+            {/* Schedule Display Section */}
+            {scheduledTime && scheduledDate && (
+              <section className="border-b border-b-gray-500">
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Scheduled for:</p>
+                      <p className="text-[#ff1200] font-semibold">
+                        {scheduledDate.toLocaleDateString(undefined, {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        at {scheduledTime}
+                      </p>
+                    </div>
+                    <button
+                      onClick={clearSchedule}
+                      className="text-gray-400 hover:text-white text-sm underline"
+                    >
+                      Clear Schedule
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
             <section>
               {deliveryMethod === "delivery" && (
                 <div className="flex justify-between items-center px-4 py-2 border-b border-b-gray-500 gap-4">
-                  <div className="flex items-center gap-2 relative w-full">
+                  <div
+                    ref={dropdownRef}
+                    className={`flex items-center gap-2 ${
+                      popUpCount === 0 && "relative"
+                    } w-full`}
+                  >
                     <LuMapPin size={20} />
                     <input
                       type="text"
@@ -205,7 +286,7 @@ const CartContent = () => {
                         opacity: isOpen ? 1 : 0,
                         height: isOpen ? "auto" : 0,
                       }}
-                      className="absolute top-[100%] bg-[#181c1f]  rounded-lg px-4 overflow-hidden"
+                      className="absolute top-[100%] bg-[#181c1f] rounded-lg px-4 overflow-hidden z-10"
                     >
                       <div className="divide-y divide-gray-500">
                         {addresses &&
@@ -233,7 +314,7 @@ const CartContent = () => {
                                   );
                                 }
                               }}
-                              className="py-2 cursor-pointer"
+                              className="py-2 cursor-pointer hover:bg-[#23272b] transition-colors"
                             >
                               {suburb || "Unknown"}, {street || "Unknown"}
                             </p>
@@ -299,7 +380,9 @@ const CartContent = () => {
                   onClick={handleConfirmOrder}
                   className="bg-[#ff1200] w-full rounded-lg py-2 text-2xl font-bold"
                 >
-                  Place Order
+                  {scheduledTime && scheduledDate
+                    ? "Schedule Order"
+                    : "Place Order"}
                 </button>
               </div>
             </section>

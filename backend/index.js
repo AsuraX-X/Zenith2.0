@@ -4,8 +4,12 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Increase request size limits and add parameterLimit
+app.use(express.json({ limit: "50mb", parameterLimit: 1000000 }));
+app.use(
+  express.urlencoded({ extended: true, limit: "50mb", parameterLimit: 1000000 })
+);
 
 const Order = require("./models/Order");
 const Reservation = require("./models/Reservation");
@@ -78,6 +82,17 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 const User = mongoose.model("User", userSchema);
 
+// Accompaniment Schema
+const Accompaniment = mongoose.model(
+  "Accompaniment",
+  new mongoose.Schema({
+    name: String,
+    price: Number,
+    category: String, // e.g., "soup", "sauce", "protein", "stew"
+    available: { type: Boolean, default: true },
+  })
+);
+
 const MenuItem = mongoose.model(
   "MenuItem",
   new mongoose.Schema({
@@ -85,19 +100,18 @@ const MenuItem = mongoose.model(
     price: Number,
     category: String,
     available: { type: Boolean, default: true },
-    image: { type: String, default: "" }, // stores Base64 string
+    image: { type: String }, // Optional field for future image implementation
+    description: { type: String, default: "" }, // Optional description field
+    allowedAccompaniments: [String], // Array of specific accompaniment IDs allowed for this item
   })
 );
-
-const fileUpload = require("express-fileupload");
-app.use(fileUpload());
 
 //Admin To Create Menu
 // Backend: POST /admin/create-menu-item
 // For debugging: You can log req.body here to inspect incoming data
 app.post("/admin/create-menu-item", async (req, res) => {
   try {
-    const { name, price, category, imageBase64 } = req.body;
+    const { name, price, category, imageUrl, allowedAccompaniments } = req.body;
 
     if (!name || !price || !category) {
       return res
@@ -109,9 +123,12 @@ app.post("/admin/create-menu-item", async (req, res) => {
       name,
       price,
       category,
+      allowedAccompaniments: allowedAccompaniments || [], // Array of accompaniment IDs
     };
-    if (imageBase64) {
-      newItemData.image = imageBase64;
+
+    // Add image URL if provided
+    if (imageUrl) {
+      newItemData.image = imageUrl;
     }
 
     const newItem = new MenuItem(newItemData);
@@ -119,7 +136,7 @@ app.post("/admin/create-menu-item", async (req, res) => {
     await newItem.save();
     res.json({ success: true });
   } catch (err) {
-    alert("Error saving menu item:", err);
+    console.error("Error saving menu item:", err);
     res
       .status(500)
       .json({ success: false, error: "Server error while saving menu item" });
@@ -322,7 +339,31 @@ app.post("/verify-reset-code", async (req, res) => {
 app.get("/menu", async (req, res) => {
   try {
     const items = await MenuItem.find({ available: true });
-    res.json(items); // Just return them directly
+
+    // Populate accompaniments for each menu item based on allowedAccompaniments IDs
+    const menuWithAccompaniments = await Promise.all(
+      items.map(async (item) => {
+        const itemObj = item.toObject();
+
+        if (
+          itemObj.allowedAccompaniments &&
+          itemObj.allowedAccompaniments.length > 0
+        ) {
+          // Get specific accompaniments by their IDs
+          const accompaniments = await Accompaniment.find({
+            _id: { $in: itemObj.allowedAccompaniments },
+            available: { $ne: false },
+          });
+          itemObj.accompaniments = accompaniments;
+        } else {
+          itemObj.accompaniments = [];
+        }
+
+        return itemObj;
+      })
+    );
+
+    res.json(menuWithAccompaniments);
   } catch (err) {
     console.error("Failed to fetch menu:", err);
     res.status(500).json({ error: "Failed to load menu" });
@@ -333,22 +374,42 @@ app.get("/seed-menu", async (req, res) => {
   try {
     const items = [
       {
-        name: "Akple/Banku with fresh Tilapia light soup",
+        name: "Banku with fresh Tilapia light soup",
         price: 100,
         category: "BANKU / AKPLE ZONE",
       },
       {
-        name: "Akple/Banku with hot pepper and fried/ grilled Tilapia",
+        name: "Banku with hot pepper and fried/ grilled Tilapia",
         price: 100,
         category: "BANKU / AKPLE ZONE",
       },
       {
-        name: "Akple/Banku with hot pepper and fried chicken",
+        name: "Banku with hot pepper and fried chicken",
         price: 70,
         category: "BANKU / AKPLE ZONE",
       },
       {
-        name: "Akple/Banku with Gbomanyana",
+        name: "Banku with Gbomanyana",
+        price: 90,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple with fresh Tilapia light soup",
+        price: 100,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple with hot pepper and fried/ grilled Tilapia",
+        price: 100,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple with hot pepper and fried chicken",
+        price: 70,
+        category: "BANKU / AKPLE ZONE",
+      },
+      {
+        name: "Akple with Gbomanyana",
         price: 90,
         category: "BANKU / AKPLE ZONE",
       },
@@ -539,6 +600,494 @@ app.get("/seed-menu", async (req, res) => {
   }
 });
 
+// Accompaniment Endpoints
+app.get("/accompaniments", async (req, res) => {
+  try {
+    const accompaniments = await Accompaniment.find({ available: true });
+    res.json(accompaniments);
+  } catch (err) {
+    console.error("Failed to fetch accompaniments:", err);
+    res.status(500).json({ error: "Failed to load accompaniments" });
+  }
+});
+
+app.post("/admin/create-accompaniment", async (req, res) => {
+  try {
+    const { name, price, category } = req.body;
+
+    if (!name || !price || !category) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing required fields" });
+    }
+
+    const newAccompaniment = new Accompaniment({
+      name,
+      price: parseFloat(price),
+      category,
+    });
+
+    await newAccompaniment.save();
+    res.json({ success: true, accompaniment: newAccompaniment });
+  } catch (err) {
+    console.error("Error creating accompaniment:", err);
+    res.status(500).json({
+      success: false,
+      error: "Server error while creating accompaniment",
+    });
+  }
+});
+
+app.post("/admin/update-accompaniment", async (req, res) => {
+  try {
+    const { id, name, price, category, available } = req.body;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (category !== undefined) updateData.category = category;
+    if (available !== undefined) updateData.available = available;
+
+    const updated = await Accompaniment.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    if (!updated) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Accompaniment not found" });
+    }
+
+    res.json({ success: true, accompaniment: updated });
+  } catch (err) {
+    console.error("Error updating accompaniment:", err);
+    res.status(500).json({
+      success: false,
+      error: "Server error while updating accompaniment",
+    });
+  }
+});
+
+app.delete("/admin/delete-accompaniment/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Accompaniment.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Accompaniment not found" });
+    }
+
+    res.json({ success: true, message: "Accompaniment deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting accompaniment:", err);
+    res.status(500).json({
+      success: false,
+      error: "Server error while deleting accompaniment",
+    });
+  }
+});
+
+app.post("/seed-accompaniments", async (req, res) => {
+  try {
+    // Clear existing accompaniments
+    await Accompaniment.deleteMany({});
+
+    const accompaniments = [
+      // Soups - only the ones that were actually used with Banku/Akple
+      { name: "Okro soup", price: 70, category: "soup" },
+      { name: "Ademe soup", price: 70, category: "soup" },
+      { name: "Ademe mix with Okro soup", price: 70, category: "soup" },
+      { name: "Fresh Tilapia light soup", price: 100, category: "soup" },
+      { name: "Egushie soup", price: 80, category: "soup" }, // Used with Eba
+
+      // Sauces - only the ones that were actually used
+      { name: "Aborbi tadi", price: 80, category: "sauce" },
+      { name: "Hot pepper", price: 0, category: "sauce" }, // Used in combo dishes
+      { name: "Gbomanyana", price: 90, category: "sauce" },
+
+      // Stews - for Boiled Yam/Plantain/Eba
+      { name: "Kontomire Stew", price: 80, category: "stew" },
+      { name: "Garden Eggs Stew", price: 60, category: "stew" },
+      { name: "Egg Stew", price: 60, category: "stew" },
+
+      // Proteins - for Atseke and other customizable items
+      { name: "Fried Tilapia", price: 100, category: "protein" },
+      { name: "Grilled Tilapia", price: 100, category: "protein" },
+      { name: "Fried Chicken", price: 70, category: "protein" },
+      { name: "Grilled Chicken", price: 70, category: "protein" },
+
+      // Extras - minimal set
+      { name: "Extra Vegetables", price: 15, category: "extra" },
+      { name: "Extra Pepper", price: 5, category: "extra" },
+    ];
+
+    await Accompaniment.insertMany(accompaniments);
+
+    const allAccompaniments = await Accompaniment.find();
+    res.json({
+      message: "Accompaniments seeded!",
+      accompaniments: allAccompaniments,
+    });
+  } catch (err) {
+    console.error("Failed to seed accompaniments:", err);
+    res.status(500).json({ error: "Failed to seed accompaniments" });
+  }
+});
+
+app.post("/seed-accurate-menu", async (req, res) => {
+  try {
+    // Clear existing menu items
+    await MenuItem.deleteMany({});
+
+    // Get all available accompaniments
+    const allAccompaniments = await Accompaniment.find({});
+
+    // Helper function to find accompaniment IDs by name
+    const findAccompanimentIds = (names) => {
+      return names
+        .map((name) => {
+          const acc = allAccompaniments.find((a) => a.name === name);
+          return acc ? acc._id.toString() : null;
+        })
+        .filter(Boolean);
+    };
+
+    const accurateMenu = [
+      // BANKU - only accompaniments that were originally paired with it
+      {
+        name: "Banku",
+        price: 5,
+        category: "BANKU / AKPLE ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Aborbi tadi",
+          "Ademe soup",
+          "Okro soup",
+          "Ademe mix with Okro soup",
+          "Fresh Tilapia light soup",
+          "Hot pepper",
+          "Gbomanyana",
+        ]),
+      },
+      // AKPLE - same accompaniments as Banku based on menu.txt
+      {
+        name: "Akple",
+        price: 5,
+        category: "BANKU / AKPLE ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Aborbi tadi",
+          "Ademe soup",
+          "Okro soup",
+          "Ademe mix with Okro soup",
+          "Fresh Tilapia light soup",
+          "Hot pepper",
+          "Gbomanyana",
+        ]),
+      },
+      // ATSEKE - only paired with proteins in menu.txt
+      {
+        name: "Atseke",
+        price: 30,
+        category: "LOCAL MIX ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Tilapia",
+          "Fried Chicken",
+          "Grilled Tilapia",
+          "Grilled Chicken",
+        ]),
+      },
+      // EBA - only paired with these soups in menu.txt
+      {
+        name: "Eba",
+        price: 20,
+        category: "LOCAL MIX ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Egushie soup",
+          "Okro soup",
+          "Ademe soup",
+          "Ademe mix with Okro soup",
+        ]),
+      },
+      // BOILED YAM - only paired with stews in menu.txt
+      {
+        name: "Boiled Yam",
+        price: 30,
+        category: "LOCAL MIX ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Kontomire Stew",
+          "Garden Eggs Stew",
+          "Egg Stew",
+        ]),
+      },
+      // BOILED PLANTAIN - only paired with stews in menu.txt
+      {
+        name: "Boiled Plantain",
+        price: 30,
+        category: "LOCAL MIX ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Kontomire Stew",
+          "Garden Eggs Stew",
+          "Egg Stew",
+        ]),
+      },
+      // BOILED YAM & PLANTAIN - only paired with stews in menu.txt
+      {
+        name: "Boiled Yam & Plantain",
+        price: 50,
+        category: "LOCAL MIX ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Kontomire Stew",
+          "Garden Eggs Stew",
+          "Egg Stew",
+        ]),
+      },
+      // JOLLOF RICE - only paired with grilled chicken in menu.txt
+      {
+        name: "Jollof Rice",
+        price: 40,
+        category: "JOLLOF ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds(["Grilled Chicken"]),
+      },
+      // JOLLOF - only paired with fish in menu.txt
+      {
+        name: "Jollof",
+        price: 40,
+        category: "JOLLOF ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds(["Fish"]),
+      },
+      // BEEF SAUCE - only paired with jollof in menu.txt
+      {
+        name: "Beef Sauce",
+        price: 70,
+        category: "JOLLOF ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds(["Jollof Rice"]),
+      },
+      // CHICKEN SAUCE - only paired with jollof in menu.txt
+      {
+        name: "Chicken Sauce",
+        price: 70,
+        category: "JOLLOF ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds(["Jollof Rice"]),
+      },
+      // ASSORTED JOLLOF - only paired with chicken in menu.txt
+      {
+        name: "Assorted Jollof",
+        price: 60,
+        category: "ASSORTED ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Chicken",
+          "Grilled Chicken",
+        ]),
+      },
+      // ASSORTED FRIED RICE - only paired with chicken in menu.txt
+      {
+        name: "Assorted Fried Rice",
+        price: 60,
+        category: "ASSORTED ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Chicken",
+          "Grilled Chicken",
+        ]),
+      },
+      // EGG FRIED RICE - paired with multiple items in menu.txt
+      {
+        name: "Egg Fried Rice",
+        price: 45,
+        category: "FRIED RICE ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Chicken",
+          "Grilled Chicken",
+          "Chicken Sauce",
+          "Beef Sauce",
+          "Fish",
+        ]),
+      },
+      // PLAIN RICE - only paired with these in menu.txt
+      {
+        name: "Plain Rice",
+        price: 30,
+        category: "PLAIN RICE ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Kontomire Stew",
+          "Egg Stew",
+          "Vegetable Stew",
+        ]),
+      },
+      // YAM CHIPS - only paired with chicken in menu.txt
+      {
+        name: "Yam Chips",
+        price: 40,
+        category: "FRIES ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Chicken",
+          "Grilled Chicken",
+        ]),
+      },
+      // FRENCH FRIES - only paired with chicken in menu.txt
+      {
+        name: "French Fries",
+        price: 50,
+        category: "FRIES ZONE",
+        available: true,
+        allowedAccompaniments: findAccompanimentIds([
+          "Fried Chicken",
+          "Grilled Chicken",
+        ]),
+      },
+
+      // Complete dishes without accompaniments (as they appeared in menu.txt)
+      {
+        name: "Gariforto",
+        price: 85,
+        category: "LOCAL MIX ZONE",
+        available: true,
+      },
+      {
+        name: "Superb Jollof",
+        price: 85,
+        category: "JOLLOF ZONE",
+        available: true,
+      },
+      {
+        name: "Beef Jollof",
+        price: 90,
+        category: "JOLLOF ZONE",
+        available: true,
+      },
+      {
+        name: "Loaded FriedRice (Fried Egg, Beef, Sausage, Chicken, Boiled Egg, Vegetables)",
+        price: 100,
+        category: "DE BLISS SPECIALS",
+        available: true,
+      },
+      {
+        name: "Loaded Jollof (Fried Egg, Beef, Sausage, Chicken, Boiled Egg)",
+        price: 100,
+        category: "DE BLISS SPECIALS",
+        available: true,
+      },
+      {
+        name: "Assorted Noodles",
+        price: 80,
+        category: "ASSORTED ZONE",
+        available: true,
+      },
+      {
+        name: "Assorted Spaghetti",
+        price: 80,
+        category: "ASSORTED ZONE",
+        available: true,
+      },
+      {
+        name: "Vegetables Fried Rice",
+        price: 60,
+        category: "FRIED RICE ZONE",
+        available: true,
+      },
+      {
+        name: "Vegetable Shawarma",
+        price: 70,
+        category: "SHAWARMA ZONE",
+        available: true,
+      },
+      {
+        name: "Chicken Shawarma",
+        price: 75,
+        category: "SHAWARMA ZONE",
+        available: true,
+      },
+      {
+        name: "Beef Shawarma",
+        price: 80,
+        category: "SHAWARMA ZONE",
+        available: true,
+      },
+      {
+        name: "Mix Shawarma",
+        price: 90,
+        category: "SHAWARMA ZONE",
+        available: true,
+      },
+      {
+        name: "Vegetable Salad",
+        price: 70,
+        category: "SALAD ZONE",
+        available: true,
+      },
+      {
+        name: "Potato Salad",
+        price: 80,
+        category: "SALAD ZONE",
+        available: true,
+      },
+      {
+        name: "Chicken Salad",
+        price: 80,
+        category: "SALAD ZONE",
+        available: true,
+      },
+      {
+        name: "Samosa",
+        price: 15,
+        category: "SALAD ZONE",
+        available: true,
+      },
+      {
+        name: "Spring rolls",
+        price: 15,
+        category: "SALAD ZONE",
+        available: true,
+      },
+      {
+        name: "Couscous",
+        price: 25,
+        category: "SALAD ZONE",
+        available: true,
+      },
+    ];
+
+    // Filter out items with empty allowedAccompaniments arrays
+    const cleanedMenu = accurateMenu.map((item) => {
+      if (
+        item.allowedAccompaniments &&
+        item.allowedAccompaniments.length === 0
+      ) {
+        delete item.allowedAccompaniments;
+      }
+      return item;
+    });
+
+    await MenuItem.insertMany(cleanedMenu);
+
+    const allMenu = await MenuItem.find();
+    res.json({
+      message: "Accurate menu with original accompaniment pairings created!",
+      count: allMenu.length,
+    });
+  } catch (err) {
+    console.error("Failed to seed accurate menu:", err);
+    res.status(500).json({ error: "Failed to seed accurate menu" });
+  }
+});
+
 app.post("/admin/update-price", async (req, res) => {
   const { id, price } = req.body;
   try {
@@ -593,8 +1142,15 @@ app.post("/admin/create-user", async (req, res) => {
 });
 
 app.post("/order", async (req, res) => {
-  const { userId, userName, items, contact, location, deliveryMethod } =
-    req.body;
+  const {
+    userId,
+    userName,
+    items,
+    contact,
+    location,
+    deliveryMethod,
+    schedule,
+  } = req.body;
   console.log("Received order data:", {
     userId,
     userName,
@@ -602,6 +1158,7 @@ app.post("/order", async (req, res) => {
     contact,
     location,
     deliveryMethod,
+    schedule,
   }); // Debug log
   try {
     // Convert lat/lon strings to numbers if they exist
@@ -613,6 +1170,24 @@ app.post("/order", async (req, res) => {
         }
       : location;
 
+    // Process schedule data
+    let processedSchedule = null;
+    if (schedule && schedule.scheduledTime && schedule.scheduledDate) {
+      processedSchedule = {
+        scheduledTime: schedule.scheduledTime,
+        scheduledDate: new Date(schedule.scheduledDate),
+        scheduledFor: schedule.scheduledFor,
+        isScheduled: true,
+      };
+    } else {
+      processedSchedule = {
+        scheduledTime: null,
+        scheduledDate: null,
+        scheduledFor: null,
+        isScheduled: false,
+      };
+    }
+
     const newOrder = new Order({
       userId,
       userName,
@@ -620,7 +1195,10 @@ app.post("/order", async (req, res) => {
       contact,
       location: processedLocation,
       deliveryMethod: deliveryMethod || "delivery",
-      pending: "⌛ Pending Confirmation",
+      schedule: processedSchedule,
+      pending: processedSchedule.isScheduled
+        ? `⏰ Scheduled for ${processedSchedule.scheduledFor}`
+        : "⌛ Pending Confirmation",
       confirmed: null,
       preparing: null,
       packing: null,
@@ -817,13 +1395,47 @@ app.delete("/admin/finished-orders/:orderId", async (req, res) => {
   }
 });
 
+// Cancel unconfirmed order (admin only)
+app.delete("/admin/cancel-order/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Check if order is already confirmed (prevent cancelling confirmed orders)
+    if (order.confirmed) {
+      return res.status(400).json({
+        error: "Cannot cancel order that has already been confirmed",
+      });
+    }
+
+    // Delete the order
+    await Order.findByIdAndDelete(req.params.orderId);
+
+    res.json({
+      success: true,
+      message: "Order cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Cancel order error:", error);
+    res.status(500).json({ error: "Failed to cancel order" });
+  }
+});
+
 //Admin Updating and Editing Menu Item
 app.put("/admin/update-menu-item/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, price, category, imageBase64 } = req.body;
+  const { name, price, category, imageUrl, allowedAccompaniments } = req.body;
   try {
     const updateFields = { name, price, category };
-    if (imageBase64) updateFields.image = imageBase64;
+    if (imageUrl) {
+      updateFields.image = imageUrl;
+    }
+    if (allowedAccompaniments !== undefined) {
+      updateFields.allowedAccompaniments = allowedAccompaniments;
+    }
     const updated = await MenuItem.findByIdAndUpdate(id, updateFields, {
       new: true,
     });

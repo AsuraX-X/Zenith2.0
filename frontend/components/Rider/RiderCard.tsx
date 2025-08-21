@@ -96,11 +96,31 @@ const RiderCard = ({ order, showActions = false }: RiderCardProps) => {
             <ul className="space-y-2">
               {order.items.map((item, idx) => (
                 <li key={idx} className="flex justify-between">
-                  <span className="text-gray-300">
-                    {item.menuItem && item.menuItem.name
-                      ? item.menuItem.name
-                      : "Unknown Item"}
-                  </span>
+                  <p>
+                    <span className="text-gray-300">
+                      {item.menuItem && item.menuItem.name
+                        ? item.menuItem.name
+                        : "Unknown Item"}
+                    </span>
+                    {item.accompaniments && (
+                      <span>
+                        {" "}
+                        with{" "}
+                        {item.accompaniments.map((accompaniment) => (
+                          <span key={accompaniment._id}>
+                            {accompaniment.name}
+                            {accompaniment !==
+                              item.accompaniments?.[
+                                item.accompaniments.length - 1
+                              ] &&
+                              item.accompaniments &&
+                              item.accompaniments.length > 1 &&
+                              ", "}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </p>
                   <span className="font-semibold text-[#ff1200]">
                     × {item.quantity}
                   </span>

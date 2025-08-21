@@ -7,6 +7,7 @@ import AdminOrders from "./admin/AdminOrders";
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
 import AdminMenuItems from "./admin/AdminMenuItems";
+import AdminAccompaniments from "./admin/AdminAccompaniments";
 import CreateRole from "./admin/CreateRole";
 import RiderDashboard from "./routes/RiderDashboard";
 import { useUserStore } from "./stores/userStore";
@@ -37,6 +38,7 @@ const App = () => {
             <Route index element={<AdminOrders />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="menu" element={<AdminMenuItems />} />
+            <Route path="accompaniments" element={<AdminAccompaniments />} />
             <Route path="roles" element={<CreateRole />} />
             <Route path="reservations" element={<AdminReservations />} />
           </Route>

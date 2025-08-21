@@ -65,7 +65,7 @@ const FoodPopUp = ({
     addToCart(
       menuItem._id,
       menuItem.name,
-      menuItem.description,
+      menuItem.description || "",
       totalPrice.toFixed(2),
       quantity,
       selectedAccs.length > 0 ? selectedAccs : undefined
@@ -83,7 +83,7 @@ const FoodPopUp = ({
         duration: 0.3,
         ease: "easeInOut",
       }}
-      className="relative h-3/4 sm:w-1/2 w-full rounded-t-lg bg-[#0e1113] overflow-hidden"
+      className="relative h-4/5 sm:w-1/2 w-full rounded-t-lg bg-[#0e1113] overflow-hidden"
     >
       <button
         className="absolute right-4 top-4 bg-white cursor-pointer rounded-full p-1"
@@ -98,25 +98,26 @@ const FoodPopUp = ({
         <img src={menuItem.image} alt={menuItem.name} />
       </div>
       <div className="flex flex-col justify-between h-1/2">
-        <div className="px-4 py-4">
-          <p>{menuItem.name}</p>
-          <p className="text-[#e87171] text-2xl font-bold">
-            GH₵{calculateTotalPrice().toFixed(2)}
-          </p>
-          <p className="text-gray-400">{menuItem.description}</p>
-
+        <div className="px-4 py-4 grid grid-cols-2">
+          <div>
+            <p>{menuItem.name}</p>
+            <p className="text-[#e87171] text-2xl font-bold">
+              GH₵{calculateTotalPrice().toFixed(2)}
+            </p>
+            <p className="text-gray-400">{menuItem.description}</p>
+          </div>
           {/* Accompaniments Section */}
           {menuItem.accompaniments && menuItem.accompaniments.length > 0 && (
-            <div className="mt-4">
+            <div className="max-h-20">
               <p className="text-sm font-semibold mb-2">Add-ons:</p>
-              <div className="space-y-2">
+              <div className="grid sm:grid-cols-2 gap-2 overflow-y-auto max-h-24 pr-1 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-300">
                 {menuItem.accompaniments.map((acc) => (
                   <label key={acc.name} className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={selectedAccompaniments[acc.name] || false}
                       onChange={() => handleAccompanimentChange(acc.name)}
-                      className=" appearance-none w-4 h-4 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-5 rounded-full border-1 cursor-pointer "
+                      className=" appearance-none w-4 h-4 shrink-0 bg-[#0e1113] border-gray-500 checked:border-[#ff2100] checked:border-5 rounded-full border-1 cursor-pointer "
                     />
                     <span className="text-sm">
                       {acc.name}{" "}

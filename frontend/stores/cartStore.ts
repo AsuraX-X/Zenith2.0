@@ -4,7 +4,7 @@ import type { cartItem, Accompaniment } from "../Interfaces/Interfaces";
 import { usePopUpStore } from "./popUpStore";
 
 interface CartState {
-  cart: cartItem[];
+  cart: (cartItem & { uniqueId: string })[];
 }
 
 interface CartActions {
@@ -24,6 +24,20 @@ interface CartActions {
 
 type CartStore = CartState & CartActions;
 
+// Helper function to generate unique ID for cart items
+const generateUniqueId = (
+  menuItemId: string,
+  accompaniments?: Accompaniment[]
+): string => {
+  const accompString = accompaniments
+    ? accompaniments
+        .map((acc) => acc._id || acc.name)
+        .sort()
+        .join("-")
+    : "no-accompaniments";
+  return `${menuItemId}-${accompString}`;
+};
+
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
@@ -33,8 +47,7 @@ export const useCartStore = create<CartStore>()(
       // Actions
       getTotal: () => {
         return get().cart.reduce(
-          (sum: number, item: cartItem) =>
-            sum + item.menuItem.price * item.quantity,
+          (sum: number, item) => sum + item.menuItem.price * item.quantity,
           0
         );
       },
@@ -49,8 +62,10 @@ export const useCartStore = create<CartStore>()(
         accompaniments?: Accompaniment[]
       ) => {
         const { removePopUp } = usePopUpStore.getState();
+        const uniqueId = generateUniqueId(menuItemId, accompaniments);
 
-        const cartItem: cartItem = {
+        const cartItem = {
+          uniqueId,
           menuItem: {
             _id: menuItemId,
             name: name,
@@ -64,10 +79,7 @@ export const useCartStore = create<CartStore>()(
 
         set((state) => {
           const existingItemIndex = state.cart.findIndex(
-            (item: cartItem) =>
-              item.menuItem._id === menuItemId &&
-              JSON.stringify(item.accompaniments) ===
-                JSON.stringify(accompaniments)
+            (item) => item.uniqueId === uniqueId
           );
 
           let newCart;
@@ -88,15 +100,15 @@ export const useCartStore = create<CartStore>()(
 
       updateQuantity: (id: string, quantity: number) => {
         set((state) => ({
-          cart: state.cart.map((item: cartItem) =>
-            item.menuItem._id === id ? { ...item, quantity } : item
+          cart: state.cart.map((item) =>
+            item.uniqueId === id ? { ...item, quantity } : item
           ),
         }));
       },
 
       removeFromCart: (id: string) => {
         set((state) => ({
-          cart: state.cart.filter((item: cartItem) => item.menuItem._id !== id),
+          cart: state.cart.filter((item) => item.uniqueId !== id),
         }));
       },
 

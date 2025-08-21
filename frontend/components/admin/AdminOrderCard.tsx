@@ -140,6 +140,31 @@ const AdminOrderCard = ({
     }
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this order? This action cannot be undone."
+    );
+    if (!confirmCancel) return;
+
+    try {
+      const res = await fetch(`/api/admin/cancel-order/${orderId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.ok) {
+        addAlert("Order cancelled successfully");
+        fetchOrders();
+      } else {
+        const error = await res.json();
+        addAlert(error.error || "Failed to cancel order");
+      }
+    } catch (error) {
+      console.error("Cancel order error:", error);
+      addAlert("Failed to cancel order");
+    }
+  };
+
   const steps = [
     { key: "confirmed", label: "Order Confirmed" },
     { key: "preparing", label: "Preparing" },
@@ -224,9 +249,9 @@ const AdminOrderCard = ({
     >
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#ff1200]">
-            Order Details
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-[#ff1200]">Order Details</h3>
+          </div>
 
           <div className="space-y-3">
             <div>
@@ -293,6 +318,17 @@ const AdminOrderCard = ({
               </div>
             )}
 
+            {order.schedule?.isScheduled && (
+              <div className="mb-2">
+                <span className="font-semibold text-gray-300">
+                  Scheduled For:
+                </span>
+                <p className="text-yellow-400 font-medium">
+                  {order.schedule.scheduledFor}
+                </p>
+              </div>
+            )}
+
             {order.riderId && order.riderId.phone && (
               <div>
                 <span className="font-semibold text-gray-300">
@@ -305,18 +341,49 @@ const AdminOrderCard = ({
         </div>
 
         <div>
-          <h4 className="font-semibold text-lg mb-3 text-[#ff1200]">
-            Order Items:
-          </h4>
+          <div className="flex justify-between items-center">
+            <h4 className="font-semibold text-lg mb-3 text-[#ff1200]">
+              Order Items:
+            </h4>
+            {!order.confirmed && (
+              <button
+                onClick={() => handleCancelOrder(order._id)}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition"
+                title="Cancel this unconfirmed order"
+              >
+                Cancel Order
+              </button>
+            )}
+          </div>
           <div className="bg-[#0e1113] border border-gray-600 rounded-lg p-4">
             <ul className="space-y-2">
               {order.items.map((item, idx) => (
                 <li key={idx} className="flex justify-between">
-                  <span className="text-gray-300">
-                    {item.menuItem && item.menuItem.name
-                      ? item.menuItem.name
-                      : "Unknown Item"}
-                  </span>
+                  <p>
+                    <span className="text-gray-300">
+                      {item.menuItem && item.menuItem.name
+                        ? item.menuItem.name
+                        : "Unknown Item"}
+                    </span>
+                    {item.accompaniments && (
+                      <span>
+                        {" "}
+                        with{" "}
+                        {item.accompaniments.map((accompaniment) => (
+                          <span key={accompaniment._id}>
+                            {accompaniment.name}
+                            {accompaniment !==
+                              item.accompaniments?.[
+                                item.accompaniments.length - 1
+                              ] &&
+                              item.accompaniments &&
+                              item.accompaniments.length > 1 &&
+                              ", "}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </p>
                   <span className="font-semibold text-[#ff1200]">
                     × {item.quantity}
                   </span>

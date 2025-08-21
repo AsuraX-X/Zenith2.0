@@ -10,7 +10,7 @@ const Alert = () => {
     <motion.div
       initial={{ visibility: "hidden" }}
       animate={{ visibility: alert ? "visible" : "hidden" }}
-      className="z-20 fixed top-0 flex justify-center items-center h-screen w-full bg-black/25 overflow-hidden"
+      className="z-1000 fixed top-0 flex justify-center items-center h-screen w-full bg-black/25 overflow-hidden"
       aria-modal="true"
       role="dialog"
     >
@@ -20,7 +20,7 @@ const Alert = () => {
           scale: alert ? 1 : 0,
           opacity: alert ? 1 : 0,
         }}
-        className="flex flex-col gap-4 justify-center items-center relative bg-[#0e1113] sm:w-125 h-fit py-4 w-80 rounded-lg"
+        className="flex flex-col gap-4 px-6 justify-center items-center bg-[#0e1113] sm:w-125 h-fit py-4 w-80 rounded-lg"
       >
         <p className="sm:text-[1.5rem]">{alertText}</p>
         <button

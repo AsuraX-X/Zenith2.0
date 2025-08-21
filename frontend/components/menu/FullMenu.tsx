@@ -39,6 +39,8 @@ const FullMenu = () => {
       const res = await fetch("/api/menu");
       const data: MenuItem[] = await res.json();
       setMenuItems(data);
+      console.log(data);
+      
       const uniqueTypes = Array.from(
         new Set(data.map((item: MenuItem) => item.category))
       );
@@ -176,4 +178,4 @@ const FullMenu = () => {
   );
 };
 
-export default FullMenu;
+export default FullMenu

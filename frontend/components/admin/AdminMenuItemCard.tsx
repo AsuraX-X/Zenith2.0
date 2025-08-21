@@ -6,7 +6,7 @@ const AdminMenuItemCard = ({ item }: { item: MenuItem }) => {
   const { handleEditItem, handleDeleteItem } = useAdminStore();
 
   return (
-    <div className="border flex flex-col justify-between border-gray-600 bg-[#181c1f] rounded-lg overflow-hidden ">
+    <div className="border h-fit min-h-120 min-w-70 w-fit flex flex-col justify-between border-gray-600 bg-[#181c1f] rounded-lg overflow-hidden ">
       <div>
         <div className="min-h-1/2 bg-gray-300 shrink-0">
           <img
@@ -34,11 +34,11 @@ const AdminMenuItemCard = ({ item }: { item: MenuItem }) => {
           {item.accompaniments && item.accompaniments.length > 0 && (
             <div className="mt-2">
               <p className="text-gray-300 text-sm font-medium mb-1">Available with:</p>
-              <div className="space-y-1">
+              <div className="space-y-1 gap-1 grid grid-cols-2">
                 {item.accompaniments.map((acc, index) => (
                   <div key={index} className="text-xs text-gray-400 flex justify-between">
                     <span>{acc.name}</span>
-                    <span>+₵{acc.price}</span>
+                    <span className="text-red-400">₵{acc.price}</span>
                   </div>
                 ))}
               </div>

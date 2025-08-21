@@ -1,5 +1,6 @@
 import { BiMinus, BiPlus, BiTrash } from "react-icons/bi";
 import { useCartStore } from "../../stores/cartStore";
+import { Accompaniment } from "../../Interfaces/Interfaces";
 
 const CartCard = ({
   name,
@@ -7,12 +8,14 @@ const CartCard = ({
   price,
   quantity,
   id,
+  accompaniments,
 }: {
   name: string;
   description: string;
   price: string;
   quantity: number;
   id: string;
+  accompaniments: Accompaniment[] | undefined;
 }) => {
   const { updateQuantity, removeFromCart } = useCartStore();
 
@@ -20,7 +23,23 @@ const CartCard = ({
     <div className="bg-[#181c1f] flex items-center justify-between gap-4 rounded-lg p-3 sm:p-4 border border-gray-600">
       <div className="flex items-center gap-4 ">
         <div>
-          <p className="">{name}</p>
+          <p className="">
+            {name}{" "}
+            {accompaniments && (
+              <span>
+                with{" "}
+                {accompaniments.map((accompaniment) => (
+                  <span key={accompaniment._id}>
+                    {accompaniment.name}
+                    {accompaniment !==
+                      accompaniments[accompaniments.length - 1] &&
+                      accompaniments.length > 1 &&
+                      ", "}
+                  </span>
+                ))}
+              </span>
+            )}
+          </p>
           <p
             className="text-gray-400 overflow-hidden"
             style={{

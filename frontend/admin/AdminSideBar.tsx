@@ -5,6 +5,7 @@ const AdminSideBar = () => {
   const routes = [
     { name: "Order", path: "/admin/orders" },
     { name: "Menu Items", path: "/admin/menu" },
+    { name: "Accompaniments", path: "/admin/accompaniments" },
     { name: "Reservations", path: "/admin/reservations" },
     { name: "Roles", path: "/admin/roles" },
   ];

@@ -295,6 +295,16 @@ const OrderCard = ({
                 <p className="text-gray-100 text-sm sm:text-base break-words">
                   Pick Up{" "}
                 </p>
+                {currentOrder.schedule?.isScheduled && (
+                  <div className="mt-2">
+                    <span className="font-semibold text-gray-300 text-sm sm:text-base">
+                      Scheduled For:
+                    </span>
+                    <p className="text-gray-100 text-sm sm:text-base">
+                      {currentOrder.schedule.scheduledFor}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -314,10 +324,16 @@ const OrderCard = ({
 
                   <div className="">
                     <span className="font-semibold text-gray-300 text-sm sm:text-base">
-                      Estimated Delivery Time:
+                      {currentOrder.schedule?.isScheduled
+                        ? "Scheduled For:"
+                        : "Estimated Delivery Time:"}
                     </span>
                     <p className="text-gray-100 text-sm sm:text-base">
-                      {time > 0 ? `${time + 15} mins` : "Calculating..."}
+                      {currentOrder.schedule?.isScheduled
+                        ? currentOrder.schedule.scheduledFor
+                        : time > 0
+                        ? `${time + 15} mins`
+                        : "Calculating..."}
                     </p>
                   </div>
                 </div>
@@ -360,11 +376,31 @@ const OrderCard = ({
                   key={item.menuItem?._id || item._id}
                   className="flex justify-between items-start border-b border-gray-600 pb-2 last:border-b-0 last:pb-0"
                 >
-                  <span className="text-gray-100 text-sm sm:text-base flex-1 pr-2 leading-tight">
-                    {item.menuItem && item.menuItem.name
-                      ? item.menuItem.name
-                      : "Unknown Item"}
-                  </span>
+                  <p>
+                    <span className="text-gray-100 text-sm sm:text-base flex-1 leading-tight">
+                      {item.menuItem && item.menuItem.name
+                        ? item.menuItem.name
+                        : "Unknown Item"}
+                    </span>
+                    {item.accompaniments && (
+                      <span>
+                        {" "}
+                        with{" "}
+                        {item.accompaniments.map((accompaniment) => (
+                          <span key={accompaniment._id}>
+                            {accompaniment.name}
+                            {accompaniment !==
+                              item.accompaniments?.[
+                                item.accompaniments.length - 1
+                              ] &&
+                              item.accompaniments &&
+                              item.accompaniments.length > 1 &&
+                              ", "}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </p>
                   <span className="font-semibold text-[#ff1200] text-sm sm:text-base whitespace-nowrap">
                     × {item.quantity}
                   </span>

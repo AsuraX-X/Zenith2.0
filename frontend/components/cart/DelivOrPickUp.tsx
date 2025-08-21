@@ -1,9 +1,10 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { FaWalking } from "react-icons/fa";
 import { MdOutlineDeliveryDining } from "react-icons/md";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import SchedulePopUp from "./SchedulePopUp";
 import { usePopUpStore } from "../../stores/popUpStore";
+import { useScheduleStore } from "../../stores/scheduleStore";
 
 const DelivOrPickUp = ({
   deliveryMethod,
@@ -14,8 +15,8 @@ const DelivOrPickUp = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { addPopUp, removePopUp } = usePopUpStore();
-  const [schedule] = useState("");
 
+  const schedule = useScheduleStore(state => state.scheduledTime);
   // useEffect(() => {
   //   const stored = localStorage.getItem("slot");
   //   if (stored) setSchedule(stored);
@@ -90,9 +91,7 @@ const DelivOrPickUp = ({
           </div>
           <div>
             <p>Schedule</p>
-            <p className="text-base text-gray-500">
-              {schedule || "Select a time"}
-            </p>
+            <p className="text-base text-gray-500">Select a time</p>
           </div>
         </label>
         <input
@@ -100,7 +99,7 @@ const DelivOrPickUp = ({
           type="checkbox"
           name="schedule"
           id="schedule"
-          checked={schedule !== ""}
+          checked={schedule !== null}
           onChange={() => {
             setIsOpen(true);
             addPopUp();

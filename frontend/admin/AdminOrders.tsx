@@ -19,7 +19,7 @@ export default function AdminOrders() {
   const finishedOrders = useAdminStore((state) => state.finishedOrders);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
     let isActive = true;
 
     const startPolling = () => {

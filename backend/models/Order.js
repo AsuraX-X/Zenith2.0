@@ -31,6 +31,13 @@ const orderSchema = new mongoose.Schema(
       enum: ["delivery", "pickup"],
       default: "delivery",
     },
+    // Scheduling fields
+    schedule: {
+      scheduledTime: String, // e.g., "2:30 PM"
+      scheduledDate: Date, // Date object for the scheduled date
+      scheduledFor: String, // Human readable string e.g., "Monday, Dec 25 at 2:30 PM"
+      isScheduled: { type: Boolean, default: false },
+    },
     riderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

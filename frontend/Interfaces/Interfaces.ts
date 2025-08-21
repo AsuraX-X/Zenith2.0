@@ -26,16 +26,20 @@ export interface MenuItem {
   _id: string;
   name: string;
   category: string;
-  description: string;
+  description?: string;
   price: number;
-  image: string;
-  accompaniments?: Accompaniment[];
+  image?: string;
+  available?: boolean;
+  allowedAccompaniments?: string[]; // Array of specific accompaniment IDs allowed
+  accompaniments?: Accompaniment[]; // Populated accompaniments for this item
 }
 
 export interface Accompaniment {
   _id?: string;
   name: string;
   price: number;
+  category: string; // "soup", "sauce", "stew", "protein", "extra"
+  available?: boolean;
 }
 
 export interface EditItem {
@@ -46,6 +50,7 @@ export interface EditItem {
   price: number;
   image: string | File;
   accompaniments?: Accompaniment[];
+  allowedAccompaniments?: string[]; // Array of specific accompaniment IDs allowed
 }
 
 export interface MenuItem2 {
@@ -78,6 +83,12 @@ export interface Order {
   contact: string;
   location: location;
   deliveryMethod?: "delivery" | "pickup";
+  schedule?: {
+    scheduledTime: string;
+    scheduledDate: string;
+    scheduledFor: string;
+    isScheduled: boolean;
+  };
   pending: string;
   confirmed: string;
   preparing: string;

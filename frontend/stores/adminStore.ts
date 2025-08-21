@@ -161,7 +161,22 @@ export const useAdminStore = create<adminStore>((set, get) => ({
 
   // Item management
   handleEditItem: (item: MenuItem | null) => {
-    set(() => ({ editItem: item }));
+    if (item) {
+      // Convert MenuItem to EditItem format
+      const editItem = {
+        _id: item._id,
+        name: item.name,
+        category: item.category,
+        description: item.description || "",
+        price: item.price,
+        image: item.image || "",
+        accompaniments: item.accompaniments || [],
+        allowedAccompaniments: item.allowedAccompaniments || [],
+      };
+      set(() => ({ editItem }));
+    } else {
+      set(() => ({ editItem: null }));
+    }
   },
 
   handleDeleteItem: async (id: string) => {

@@ -1,22 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { MenuItem, Accompaniment } from "../Interfaces/Interfaces";
 import AdminSideBar from "./AdminSideBar";
 import AdminMenuItemCard from "../components/admin/AdminMenuItemCard";
 import { useAdminStore } from "../stores/adminStore";
 import { useRefreshMenuEffect } from "../hooks";
 import { useAnimationStore } from "../stores/animationStore";
+import { useAccompanimentStore } from "../stores/accompanimentStore";
 import { BiTrash } from "react-icons/bi";
+import { uploadImageToCloudinary } from "../services/cloudinary";
 
 const AdminMenuItems = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [accompaniments, setAccompaniments] = useState<Accompaniment[]>([]);
-  const [newAccompaniment, setNewAccompaniment] = useState<Accompaniment>({
-    name: "",
-    price: 0,
-  });
+  const [selectedAccompaniments, setSelectedAccompaniments] = useState<
+    string[]
+  >([]);
+  const [editSelectedAccompaniments, setEditSelectedAccompaniments] = useState<
+    string[]
+  >([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useRefreshMenuEffect();
   const { refreshMenu } = useAdminStore();
+  const { accompaniments, fetchAccompaniments } = useAccompanimentStore();
+
+  // Fetch accompaniments on component mount
+  useEffect(() => {
+    fetchAccompaniments();
+  }, [fetchAccompaniments]);
 
   const {
     addFilter,
@@ -35,9 +47,35 @@ const AdminMenuItems = () => {
   const filter = useAdminStore((state) => state.filter);
   const uniqueCategories = useAdminStore((state) => state.uniqueCategories);
   const animation = useAnimationStore((state) => state.animation);
-  const handleSubmitWithAccompaniments = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+
+  // Handle accompaniment selection
+  const handleAccompanimentToggle = (accompanimentId: string) => {
+    setSelectedAccompaniments((prev) =>
+      prev.includes(accompanimentId)
+        ? prev.filter((id) => id !== accompanimentId)
+        : [...prev, accompanimentId]
+    );
+  };
+
+  // Handle edit accompaniment selection
+  const handleEditAccompanimentToggle = (accompanimentId: string) => {
+    setEditSelectedAccompaniments((prev) =>
+      prev.includes(accompanimentId)
+        ? prev.filter((id) => id !== accompanimentId)
+        : [...prev, accompanimentId]
+    );
+  };
+
+  // Update edit selections when editItem changes
+  useEffect(() => {
+    if (editItem && editItem.allowedAccompaniments) {
+      setEditSelectedAccompaniments(editItem.allowedAccompaniments);
+    } else {
+      setEditSelectedAccompaniments([]);
+    }
+  }, [editItem]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Get form data from the store
@@ -49,10 +87,28 @@ const AdminMenuItems = () => {
     }
 
     try {
-      let imageBase64 = "";
-      if (formData.image) {
-        imageBase64 = await convertToBase64(formData.image);
+      setUploading(true);
+
+      let imageUrl = "";
+
+      // Upload image to Cloudinary if selected
+      if (selectedImage) {
+        try {
+          imageUrl = await uploadImageToCloudinary(selectedImage);
+        } catch (error) {
+          useAdminStore
+            .getState()
+            .setMessage(
+              error instanceof Error ? error.message : "Failed to upload image"
+            );
+          setUploading(false);
+          return;
+        }
       }
+
+      // Get selected accompaniment IDs
+      const allowedAccompaniments =
+        selectedAccompaniments.length > 0 ? selectedAccompaniments : undefined;
 
       const response = await fetch("/api/admin/create-menu-item", {
         method: "POST",
@@ -61,9 +117,8 @@ const AdminMenuItems = () => {
           name: formData.name,
           price: parseFloat(formData.price),
           category: formData.category,
-          imageBase64,
-          accompaniments:
-            accompaniments.length > 0 ? accompaniments : undefined,
+          imageUrl, // Send the Cloudinary URL
+          allowedAccompaniments,
         }),
       });
 
@@ -71,13 +126,13 @@ const AdminMenuItems = () => {
 
       if (result.success) {
         useAdminStore.getState().setMessage("Menu item added successfully!");
-        // Reset form
+        // Reset form and selections
         useAdminStore.setState({
           formData: { name: "", price: "", category: "", image: null },
         });
-        // Reset accompaniments
-        setAccompaniments([]);
-        setNewAccompaniment({ name: "", price: 0 });
+        setSelectedAccompaniments([]);
+        setSelectedImage(null);
+        setImagePreview(null);
         // Refresh menu
         await useAdminStore.getState().refreshMenu();
       } else {
@@ -88,21 +143,110 @@ const AdminMenuItems = () => {
     } catch (error) {
       console.error("Error adding menu item:", error);
       useAdminStore.getState().setMessage("Error adding menu item");
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Helper function to convert file to base64
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
+  // Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Image select triggered");
+    const file = e.target.files?.[0];
+    console.log("Selected file:", file);
+
+    if (file) {
+      console.log("File details:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      setSelectedImage(file);
+
+      // Create preview
       const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        const base64 = result.split(",")[1];
-        resolve(base64);
+      reader.onload = (e) => {
+        console.log("Image preview created");
+        setImagePreview(e.target?.result as string);
       };
-      reader.onerror = (error) => reject(error);
-    });
+      reader.readAsDataURL(file);
+    } else {
+      console.log("No file selected");
+    }
+  };
+
+  // Custom update function for the new accompaniment structure
+  const handleCustomUpdateItem = async () => {
+    if (!editItem) return;
+
+    try {
+      setUploading(true);
+
+      if (!editItem.name || !editItem.price || !editItem.category) {
+        useAdminStore.getState().setMessage("Please fill all fields");
+        setUploading(false);
+        return;
+      }
+
+      let imageUrl = "";
+
+      // Upload image to Cloudinary if a new image is selected
+      if (selectedImage) {
+        try {
+          imageUrl = await uploadImageToCloudinary(selectedImage);
+          console.log("Image uploaded for edit:", imageUrl);
+        } catch (error) {
+          useAdminStore
+            .getState()
+            .setMessage(
+              error instanceof Error ? error.message : "Failed to upload image"
+            );
+          setUploading(false);
+          return;
+        }
+      }
+
+      // Get selected accompaniment IDs
+      const allowedAccompaniments =
+        editSelectedAccompaniments.length > 0
+          ? editSelectedAccompaniments
+          : undefined;
+
+      const updateData: any = {
+        name: editItem.name,
+        price: parseFloat(editItem.price.toString()),
+        category: editItem.category,
+        allowedAccompaniments,
+      };
+
+      // Only add imageUrl if a new image was uploaded
+      if (imageUrl) {
+        updateData.imageUrl = imageUrl;
+      }
+
+      const res = await fetch(`/api/admin/update-menu-item/${editItem._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        useAdminStore.getState().setMessage("Item updated successfully!");
+        useAdminStore.getState().handleEditItem(null);
+        setEditSelectedAccompaniments([]);
+        setSelectedImage(null);
+        setImagePreview(null);
+        await useAdminStore.getState().refreshMenu();
+      } else {
+        useAdminStore.getState().setMessage(result.error || "Update failed");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      useAdminStore.getState().setMessage("Update failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -114,8 +258,8 @@ const AdminMenuItems = () => {
           <h2 className="text-xl sm:text-2xl font-bold mb-4 text-[#ff1200]">
             Add New Menu Item
           </h2>
-          <form onSubmit={handleSubmitWithAccompaniments} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-wrap gap-4">
               <input
                 name="name"
                 value={formData.name}
@@ -140,116 +284,99 @@ const AdminMenuItems = () => {
                 className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white placeholder-gray-400"
               />
             </div>
+
+            {/* Image Upload Section */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Item Image:
               </label>
-              <input
-                name="image"
-                type="file"
-                accept="image/*"
-                onChange={handleChangeMenu}
-                className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ff1200] file:text-white hover:file:bg-[#d81b00]"
-              />
-            </div>
-
-            {/* Accompaniments Section */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Accompaniments (Optional):
-              </label>
-              <div className="space-y-2">
-                {accompaniments.map((acc, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-2 items-center bg-[#0e1113] p-2 rounded-lg border border-gray-600"
-                  >
-                    <input
-                      value={acc.name}
-                      onChange={(e) => {
-                        const updated = [...accompaniments];
-                        updated[index].name = e.target.value;
-                        setAccompaniments(updated);
-                      }}
-                      placeholder="Accompaniment name"
-                      className="flex-1 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#181c1f] text-white placeholder-gray-400"
-                    />
-                    <input
-                      type="number"
-                      step="0.50"
-                      value={acc.price === 0 ? "" : acc.price}
-                      onChange={(e) => {
-                        const updated = [...accompaniments];
-                        updated[index].price = parseFloat(e.target.value) || 0;
-                        setAccompaniments(updated);
-                      }}
-                      placeholder="Cost"
-                      className="w-24 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#181c1f] text-white placeholder-gray-400"
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageSelect}
+                  className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ff1200] file:text-white hover:file:bg-[#d81b00]"
+                />
+                {imagePreview && (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-lg border border-gray-600"
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        const updated = accompaniments.filter(
-                          (_, i) => i !== index
-                        );
-                        setAccompaniments(updated);
+                        setSelectedImage(null);
+                        setImagePreview(null);
                       }}
-                      className="w-13 flex justify-center items-center py-2.5  bg-red-600 text-white rounded hover:bg-red-700 transition"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                     >
-                    <BiTrash size={20}/>
+                      ×
                     </button>
                   </div>
-                ))}
-                <div className="flex gap-2">
-                  <input
-                    value={newAccompaniment.name}
-                    onChange={(e) =>
-                      setNewAccompaniment({
-                        ...newAccompaniment,
-                        name: e.target.value,
-                      })
-                    }
-                    placeholder="New accompaniment name"
-                    className="flex-1 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white placeholder-gray-400"
-                  />
-                  <input
-                    type="number"
-                    step="0.50"
-                    value={
-                      newAccompaniment.price === 0 ? "" : newAccompaniment.price
-                    }
-                    onChange={(e) =>
-                      setNewAccompaniment({
-                        ...newAccompaniment,
-                        price: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="Cost"
-                    className="w-24 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white placeholder-gray-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (newAccompaniment.name.trim()) {
-                        setAccompaniments([
-                          ...accompaniments,
-                          { ...newAccompaniment },
-                        ]);
-                        setNewAccompaniment({ name: "", price: 0 });
-                      }
-                    }}
-                    className="px-4 py-2 bg-[#ff1200] text-white rounded hover:bg-[#d81b00] transition"
-                  >
-                    Add
-                  </button>
-                </div>
+                )}
+                <p className="text-xs text-gray-400">
+                  Maximum size: 5MB. Supported formats: JPEG, PNG, WebP. Images
+                  will be automatically optimized.
+                </p>
               </div>
             </div>
+
+            {/* Individual Accompaniment Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Available Accompaniments:
+              </label>
+              <div className="max-h-40 overflow-y-auto border border-gray-600 rounded-lg p-3 bg-[#0e1113]">
+                {accompaniments.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {accompaniments.map((accompaniment) => (
+                      <label
+                        key={accompaniment._id}
+                        className="flex items-center space-x-2 text-white"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAccompaniments.includes(
+                            accompaniment._id!
+                          )}
+                          onChange={() =>
+                            handleAccompanimentToggle(accompaniment._id!)
+                          }
+                          className="form-checkbox h-4 w-4 text-[#ff1200] bg-[#0e1113] border-gray-600 rounded focus:ring-[#ff1200]"
+                        />
+                        <span className="text-sm">
+                          {accompaniment.name} - GH₵{accompaniment.price}
+                          <span className="text-gray-400 ml-1">
+                            ({accompaniment.category})
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    No accompaniments available. Create some first.
+                  </p>
+                )}
+              </div>
+              <p className="text-sm text-gray-400 mt-1">
+                Select specific accompaniments that can be added to this menu
+                item.
+              </p>
+            </div>
+
             <button
               type="submit"
-              className="w-full bg-[#ff1200] text-white px-6 py-3 rounded-lg hover:bg-[#d81b00] transition"
+              disabled={uploading}
+              className={`w-full px-6 py-3 rounded-lg transition ${
+                uploading
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-[#ff1200] hover:bg-[#d81b00]"
+              } text-white`}
             >
-              Add Item
+              {uploading ? "Uploading..." : "Add Item"}
             </button>
             {message && (
               <p className="text-[#ff1200] text-center font-medium">
@@ -384,110 +511,114 @@ const AdminMenuItems = () => {
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     New Image (optional):
                   </label>
-                  <input
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleChangeEdit}
-                    className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ff1200] file:text-white hover:file:bg-[#d81b00]"
-                  />
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageSelect}
+                      className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-[#ff1200] bg-[#0e1113] text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ff1200] file:text-white hover:file:bg-[#d81b00]"
+                    />
+                    {imagePreview && (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded-lg border border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedImage(null);
+                            setImagePreview(null);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {editItem.image && !imagePreview && (
+                      <div className="relative">
+                        <img
+                          src={typeof editItem.image === 'string' ? editItem.image : URL.createObjectURL(editItem.image)}
+                          alt="Current image"
+                          className="w-32 h-32 object-cover rounded-lg border border-gray-600"
+                        />
+                        <span className="text-xs text-gray-400 block mt-1">
+                          Current image
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      Maximum size: 5MB. Supported formats: JPEG, PNG, WebP.
+                      Images will be automatically optimized.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Edit Accompaniments Section */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Accompaniments:
+                    Available Accompaniments:
                   </label>
-                  <div className="space-y-2">
-                    {editItem.accompaniments?.map((acc, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-2 items-center bg-[#0e1113] p-2 rounded-lg border border-gray-600"
-                      >
-                        <input
-                          value={acc.name}
-                          onChange={(e) => {
-                            const updated = [
-                              ...(editItem.accompaniments || []),
-                            ];
-                            updated[index].name = e.target.value;
-                            // Create a compatible object for the update
-                            const updatedEditItem = {
-                              ...editItem,
-                              accompaniments: updated,
-                            };
-                            handleEditItem(updatedEditItem as MenuItem);
-                          }}
-                          placeholder="Accompaniment name"
-                          className="flex-1 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#181c1f] text-white placeholder-gray-400 text-sm"
-                        />
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={acc.price === 0 ? "" : acc.price}
-                          onChange={(e) => {
-                            const updated = [
-                              ...(editItem.accompaniments || []),
-                            ];
-                            updated[index].price =
-                              parseFloat(e.target.value) || 0;
-                            // Create a compatible object for the update
-                            const updatedEditItem = {
-                              ...editItem,
-                              accompaniments: updated,
-                            };
-                            handleEditItem(updatedEditItem as MenuItem);
-                          }}
-                          placeholder="Extra cost"
-                          className="w-20 p-2 border border-gray-600 rounded focus:outline-none focus:border-[#ff1200] bg-[#181c1f] text-white placeholder-gray-400 text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated =
-                              editItem.accompaniments?.filter(
-                                (_, i) => i !== index
-                              ) || [];
-                            // Create a compatible object for the update
-                            const updatedEditItem = {
-                              ...editItem,
-                              accompaniments: updated,
-                            };
-                            handleEditItem(updatedEditItem as MenuItem);
-                          }}
-                          className="px-2 py-2.5 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                        >
-                        <BiTrash/>
-                        </button>
+                  <div className="max-h-40 overflow-y-auto border border-gray-600 rounded-lg p-3 bg-[#0e1113]">
+                    {accompaniments.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {accompaniments.map((accompaniment) => (
+                          <label
+                            key={accompaniment._id}
+                            className="flex items-center space-x-2 text-white"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={editSelectedAccompaniments.includes(
+                                accompaniment._id!
+                              )}
+                              onChange={() =>
+                                handleEditAccompanimentToggle(
+                                  accompaniment._id!
+                                )
+                              }
+                              className="form-checkbox h-4 w-4 text-[#ff1200] bg-[#0e1113] border-gray-600 rounded focus:ring-[#ff1200]"
+                            />
+                            <span className="text-sm">
+                              {accompaniment.name} - GH₵{accompaniment.price}
+                              <span className="text-gray-400 ml-1">
+                                ({accompaniment.category})
+                              </span>
+                            </span>
+                          </label>
+                        ))}
                       </div>
-                    )) || []}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const current = editItem.accompaniments || [];
-                        // Create a compatible object for the update
-                        const updatedEditItem = {
-                          ...editItem,
-                          accompaniments: [...current, { name: "", price: 0 }],
-                        };
-                        handleEditItem(updatedEditItem as MenuItem);
-                      }}
-                      className="w-full px-3 py-2 border border-dashed border-gray-600 text-gray-400 rounded hover:border-[#ff1200] hover:text-[#ff1200] transition text-sm"
-                    >
-                      + Add Accompaniment
-                    </button>
+                    ) : (
+                      <p className="text-gray-400 text-sm">
+                        No accompaniments available. Create some first.
+                      </p>
+                    )}
                   </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Select specific accompaniments that can be added to this
+                    menu item.
+                  </p>
                 </div>
 
                 <div className="flex gap-2 pt-4">
                   <button
-                    onClick={handleUpdateItem}
-                    className="flex-1 bg-[#ff1200] text-white py-3 rounded-lg hover:bg-[#d81b00] transition"
+                    onClick={handleCustomUpdateItem}
+                    disabled={uploading}
+                    className={`flex-1 py-3 rounded-lg transition ${
+                      uploading
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-[#ff1200] hover:bg-[#d81b00]"
+                    } text-white`}
                   >
-                    Save Changes
+                    {uploading ? "Updating..." : "Save Changes"}
                   </button>
                   <button
-                    onClick={() => handleEditItem(null)}
+                    onClick={() => {
+                      handleEditItem(null);
+                      setEditSelectedAccompaniments([]);
+                    }}
                     className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition"
                   >
                     Cancel
