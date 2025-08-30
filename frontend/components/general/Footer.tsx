@@ -11,7 +11,10 @@ const Footer = () => {
       </div>
       <div className="flex flex-col gap-10 items-start pt-5 sm:flex-row">
         <a href="https://maps.app.goo.gl/8Hc4oTDfvq8ho64P7" target="_blank">
-          <img src="/assets/images/image.png" alt="googleMapLink" />
+          <img
+            src="https://res.cloudinary.com/dcbkvcif1/image/upload/v1756593040/image_bxyfww.png"
+            alt="googleMapLink"
+          />
         </a>
         <div className="py-4">
           <div className="flex flex-col gap-6">
