@@ -37,7 +37,7 @@ const About = () => {
               About De Bliss Food Hub
             </h1>
             <p className="text-xl md:text-2xl opacity-90">
-              From Mrs. Ester's kitchen to your table
+              From Mrs. Esther's kitchen to your table
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ const About = () => {
                 transition={{ duration: 0.4, ease: "linear" }}
                 className="text-3xl font-bold text-white mb-6"
               >
-                Mrs. Ester Elorm's Story
+                Mrs. Esther Wunu's Story
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 35 }}
@@ -63,7 +63,7 @@ const About = () => {
                 transition={{ duration: 0.4, ease: "linear" }}
                 className="text-gray-300 mb-4 leading-relaxed"
               >
-                What started as a simple hobby for Mrs. Ester Elorm has
+                What started as a simple hobby for Mrs. Esther Wunu has
                 blossomed into something beautiful. Cooking has always been her
                 passion – a way to express creativity, show love, and bring
                 people together around the table. It wasn't until her friends
@@ -76,7 +76,7 @@ const About = () => {
                 transition={{ duration: 0.4, ease: "linear" }}
                 className="text-gray-300 mb-4 leading-relaxed"
               >
-                Mrs. Ester's husband has been her greatest inspiration and
+                Mrs. Esther's husband has been her greatest inspiration and
                 biggest supporter. He believed in her culinary skills so much
                 that he would invite his friends over every weekend, proudly
                 telling them they were about to experience his wife's delicious
@@ -93,9 +93,9 @@ const About = () => {
                 Watching the joy on people's faces as they savored each bite,
                 seeing friendships strengthen over shared meals, and hearing the
                 countless suggestions to "open a restaurant" – that's when De
-                Bliss was born. This restaurant is the culmination of Mrs. Ester
-                Elorm's love, her friends' encouragement, and a dream nurtured
-                by the most important people in her life.
+                Bliss was born. This restaurant is the culmination of Mrs.
+                Esther Wunu's love, her friends' encouragement, and a dream
+                nurtured by the most important people in her life.
               </motion.p>
             </div>
             <motion.div
@@ -114,7 +114,7 @@ const About = () => {
                   Cooked with Love
                 </h3>
                 <p className="text-gray-300">
-                  Every dish carries the same love and care that Mrs. Ester
+                  Every dish carries the same love and care that Mrs. Esther
                   started in her family kitchen.
                 </p>
               </div>
@@ -125,7 +125,7 @@ const About = () => {
         {/* Journey Section */}
         <div className="bg-[#181c1f] rounded-lg border border-gray-600 p-8 mb-16">
           <h2 className="text-3xl font-bold text-white text-center mb-12">
-            Mrs. Ester's Journey
+            Mrs. Esther's Journey
           </h2>
           <motion.div
             variants={parent}
@@ -143,7 +143,7 @@ const About = () => {
                 It Started at Home
               </h4>
               <p className="text-gray-300">
-                Weekend gatherings with friends, Mrs. Ester experimenting with
+                Weekend gatherings with friends, Mrs. Esther experimenting with
                 recipes, and creating memorable dining experiences in her own
                 kitchen.
               </p>
@@ -160,7 +160,7 @@ const About = () => {
               </h4>
               <p className="text-gray-300">
                 The constant encouragement from friends who experienced Mrs.
-                Ester's cooking gave her the confidence to dream bigger.
+                Esther's cooking gave her the confidence to dream bigger.
               </p>
             </motion.div>
 
@@ -175,7 +175,7 @@ const About = () => {
               </h4>
               <p className="text-gray-300">
                 With her husband's unwavering support and friends'
-                encouragement, Mrs. Ester turned passion into purpose.
+                encouragement, Mrs. Esther turned passion into purpose.
               </p>
             </motion.div>
           </motion.div>
@@ -201,7 +201,7 @@ const About = () => {
               <h3 className="text-2xl font-bold text-white">Our Mission</h3>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              To recreate the warmth and joy of Mrs. Ester's weekend gatherings
+              To recreate the warmth and joy of Mrs. Esther's weekend gatherings
               for every customer. We're committed to serving meals that don't
               just satisfy hunger, but create connections, spark conversations,
               and make every dining experience feel like you're sharing a meal
@@ -223,7 +223,7 @@ const About = () => {
             </div>
             <p className="text-gray-300 leading-relaxed">
               To become a place where food brings people together, just like it
-              did in Mrs. Ester's home. We envision De Bliss as more than a
+              did in Mrs. Esther's home. We envision De Bliss as more than a
               restaurant – it's a community hub where every meal is prepared
               with the same love and attention that made her weekend gatherings
               special.
@@ -254,7 +254,7 @@ const About = () => {
                 </h4>
                 <p className="text-gray-300">
                   Every recipe is crafted with the same love that started Mrs.
-                  Ester's journey. Cooking isn't just our profession – it's our
+                  Esther's journey. Cooking isn't just our profession – it's our
                   passion.
                 </p>
               </div>
@@ -269,7 +269,7 @@ const About = () => {
                 </div>
                 <h4 className="text-xl font-bold text-white mb-3">Community</h4>
                 <p className="text-gray-300">
-                  Inspired by the friendships forged over Mrs. Ester's dining
+                  Inspired by the friendships forged over Mrs. Esther's dining
                   table, we believe food has the power to bring people together.
                 </p>
               </div>
@@ -287,7 +287,7 @@ const About = () => {
                 </h4>
                 <p className="text-gray-300">
                   From hobby to profession, we maintain the same attention to
-                  detail and quality that made Mrs. Ester's weekend meals
+                  detail and quality that made Mrs. Esther's weekend meals
                   unforgettable.
                 </p>
               </div>
@@ -321,7 +321,7 @@ const About = () => {
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-[#ff1200] mb-2">
-              <AnimatedCounter from={0} to={10000} infinite={true} />
+                <AnimatedCounter from={0} to={10000} infinite={true} />
               </div>
               <p className="text-gray-300">Love in Every Dish</p>
             </div>
@@ -335,14 +335,14 @@ const About = () => {
           </h2>
           <div className="gap-8">
             <div className="bg-[#181c1f] rounded-lg border border-gray-600 p-6 text-center">
-              <div className="w-40 h-40 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center"></div>
+
               <h4 className="text-xl font-bold text-white mb-2">
-                Mrs. Ester Elorm
+                Mrs. Esther Wunu
               </h4>
               <p className="text-[#ff1200] mb-3">Chef & Founder</p>
               <p className="text-gray-300 text-sm">
-                What began as a hobby has become a calling. Mrs. Ester's passion
-                for cooking transformed weekend gatherings into a dream
+                What began as a hobby has become a calling. Mrs. Esther's
+                passion for cooking transformed weekend gatherings into a dream
                 restaurant that serves love on every plate.
               </p>
             </div>
@@ -356,7 +356,7 @@ const About = () => {
           </h2>
           <p className="text-xl text-white mb-6 opacity-90">
             Experience the same warmth and delicious flavors that started Mrs.
-            Ester's journey
+            Esther's journey
           </p>
           <NavLink
             onClick={() => {

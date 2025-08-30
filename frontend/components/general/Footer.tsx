@@ -1,4 +1,4 @@
-import { FaFacebookF, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -25,7 +25,7 @@ const Footer = () => {
             </p>
             <p>
               <span className="text-[#ff2100]/85">Email:</span>{" "}
-              restaurant@gmail.com
+              debliss2024@gmail.com
             </p>
           </div>
         </div>
@@ -47,13 +47,16 @@ const Footer = () => {
         <h1 className="font-bold">De Bliss</h1>
         <p>© 2025 De Bliss Restaurant</p>
         <div className="flex gap-4 justify-center items-center">
-          <a href="">
-            <FaFacebookF />
-          </a>
-          <a href="">
+          <a
+            target="_blank"
+            href="https://www.instagram.com/deblissrestaurant/"
+          >
             <FaInstagram />
           </a>
-          <a href="">
+          <a
+            target="_blank"
+            href="https://api.whatsapp.com/send?phone=233256286634"
+          >
             <FaWhatsapp />
           </a>
         </div>

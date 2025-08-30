@@ -27,8 +27,6 @@ const Login = () => {
         navigate("/admin");
       } else if (user.role === "rider") {
         navigate("/rider");
-      } else {
-        navigate("/menu");
       }
       setAuth("");
       removePopUp();

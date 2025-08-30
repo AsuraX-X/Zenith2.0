@@ -5,6 +5,7 @@ import { signup } from "../services/api";
 import { usePopUpStore } from "../stores/popUpStore";
 import { useAuthStore } from "../stores/authStore";
 import { useUserStore } from "../stores/userStore";
+import { apiUrl } from "../config/constants";
 
 const Register = () => {
   const { setAuth } = useAuthStore();
@@ -36,7 +37,7 @@ const Register = () => {
     setUsernameError("");
 
     try {
-      const response = await fetch("/api/check-username", {
+      const response = await fetch(apiUrl("check-username"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),

@@ -12,6 +12,7 @@ import { useUserStore } from "../../stores/userStore";
 import { useAnimationStore } from "../../stores/animationStore";
 import { usePopUpStore } from "../../stores/popUpStore";
 import { useScheduleStore } from "../../stores/scheduleStore";
+import { apiUrl } from "../../config/constants";
 
 const CartContent = () => {
   const user = useUserStore((state) => state.user);
@@ -51,7 +52,7 @@ const CartContent = () => {
 
   const addresses = useLocationStore((state) => state.addresses ?? []);
 
-  const handler = useRef<number | null>(null);
+  const handler = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Handle clicks outside dropdown to close it
@@ -120,7 +121,7 @@ const CartContent = () => {
         };
       }
 
-      const res = await fetch("/api/order", {
+      const res = await fetch(apiUrl("order"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,6 +131,7 @@ const CartContent = () => {
             menuItem: item.menuItem._id,
             quantity: item.quantity,
             accompaniments: item.accompaniments,
+            specialNote: item.specialNote,
           })),
           contact,
           location,
@@ -184,6 +186,7 @@ const CartContent = () => {
                       price={item.menuItem.price.toFixed(2)}
                       quantity={item.quantity}
                       accompaniments={item.accompaniments}
+                      specialNote={item.specialNote}
                     />
                   </div>
                 ))}

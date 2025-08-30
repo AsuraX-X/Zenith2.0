@@ -5,6 +5,7 @@ import type { Rider } from "../Interfaces/Interfaces";
 import { motion } from "motion/react";
 import { useAdminStore } from "../stores/adminStore";
 import { useAnimationStore } from "../stores/animationStore";
+import { apiUrl } from "../config/constants";
 
 export default function AdminOrders() {
   const [riders, setRiders] = useState<Rider[]>([]);
@@ -19,7 +20,7 @@ export default function AdminOrders() {
   const finishedOrders = useAdminStore((state) => state.finishedOrders);
 
   useEffect(() => {
-    let interval: number;
+    let interval: NodeJS.Timeout;
     let isActive = true;
 
     const startPolling = () => {
@@ -52,7 +53,7 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
 
-    fetch("/api/admin/riders")
+    fetch(apiUrl("admin/riders"))
       .then((res) => res.json())
       .then((data) => setRiders(Array.isArray(data) ? data : [fetchOrders]))
       .catch((err) => console.error("Error fetching riders:", err));
@@ -142,3 +143,4 @@ export default function AdminOrders() {
     </div>
   );
 }
+

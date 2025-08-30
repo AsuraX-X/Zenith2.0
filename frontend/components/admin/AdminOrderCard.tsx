@@ -4,6 +4,7 @@ import { BiCheck, BiPhone } from "react-icons/bi";
 import { BsWhatsapp } from "react-icons/bs";
 import { useAdminStore } from "../../stores/adminStore";
 import { usePopUpStore } from "../../stores/popUpStore";
+import { apiUrl } from "../../config/constants";
 
 const AdminOrderCard = ({
   order,
@@ -24,7 +25,7 @@ const AdminOrderCard = ({
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/admin/finished-orders/${orderId}`, {
+      const res = await fetch(apiUrl(`admin/finished-orders/${orderId}`), {
         method: "DELETE",
       });
       if (res.ok) {
@@ -51,7 +52,7 @@ const AdminOrderCard = ({
         // Confirm each step that isn't already confirmed
         for (const step of stepsToConfirm) {
           if (!order[step.key]) {
-            const res = await fetch("/api/admin/order-status", {
+            const res = await fetch(apiUrl("admin/order-status"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -69,7 +70,7 @@ const AdminOrderCard = ({
       }
 
       // Assign the rider
-      const res = await fetch("/api/admin/assign-rider", {
+      const res = await fetch(apiUrl("admin/assign-rider"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, riderId }),
@@ -91,7 +92,7 @@ const AdminOrderCard = ({
     statusKey: string,
     value: string
   ) => {
-    const res = await fetch("/api/admin/order-status", {
+    const res = await fetch(apiUrl("admin/order-status"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, statusKey, value }),
@@ -118,7 +119,7 @@ const AdminOrderCard = ({
     try {
       // Send multiple updates to clear the steps
       for (const update of updates) {
-        const res = await fetch("/api/admin/order-status", {
+        const res = await fetch(apiUrl("admin/order-status"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -147,7 +148,7 @@ const AdminOrderCard = ({
     if (!confirmCancel) return;
 
     try {
-      const res = await fetch(`/api/admin/cancel-order/${orderId}`, {
+      const res = await fetch(apiUrl(`admin/cancel-order/${orderId}`), {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
@@ -358,33 +359,41 @@ const AdminOrderCard = ({
           <div className="bg-[#0e1113] border border-gray-600 rounded-lg p-4">
             <ul className="space-y-2">
               {order.items.map((item, idx) => (
-                <li key={idx} className="flex justify-between">
-                  <p>
-                    <span className="text-gray-300">
-                      {item.menuItem && item.menuItem.name
-                        ? item.menuItem.name
-                        : "Unknown Item"}
-                    </span>
-                    {item.accompaniments && (
-                      <span>
-                        {" "}
-                        with{" "}
-                        {item.accompaniments.map((accompaniment) => (
-                          <span key={accompaniment._id}>
-                            {accompaniment.name}
-                            {accompaniment !==
-                              item.accompaniments?.[
-                                item.accompaniments.length - 1
-                              ] &&
-                              item.accompaniments &&
-                              item.accompaniments.length > 1 &&
-                              ", "}
-                          </span>
-                        ))}
+                <li key={idx} className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p>
+                      <span className="text-gray-300">
+                        {item.menuItem && item.menuItem.name
+                          ? item.menuItem.name
+                          : "Unknown Item"}
                       </span>
+                      {item.accompaniments &&
+                        item.accompaniments.length > 0 && (
+                          <span>
+                            {" "}
+                            with{" "}
+                            {item.accompaniments.map((accompaniment) => (
+                              <span key={accompaniment._id}>
+                                {accompaniment.name}
+                                {accompaniment !==
+                                  item.accompaniments?.[
+                                    item.accompaniments.length - 1
+                                  ] &&
+                                  item.accompaniments &&
+                                  item.accompaniments.length > 1 &&
+                                  ", "}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                    </p>
+                    {item.specialNote && (
+                      <p className="text-yellow-400 text-sm italic mt-1">
+                        Note: {item.specialNote}
+                      </p>
                     )}
-                  </p>
-                  <span className="font-semibold text-[#ff1200]">
+                  </div>
+                  <span className="font-semibold text-[#ff1200] ml-2">
                     × {item.quantity}
                   </span>
                 </li>

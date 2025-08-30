@@ -14,7 +14,8 @@ interface CartActions {
     description: string,
     price: string,
     quantity: number,
-    accompaniments?: Accompaniment[]
+    accompaniments?: Accompaniment[],
+    specialNote?: string
   ) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
@@ -27,7 +28,8 @@ type CartStore = CartState & CartActions;
 // Helper function to generate unique ID for cart items
 const generateUniqueId = (
   menuItemId: string,
-  accompaniments?: Accompaniment[]
+  accompaniments?: Accompaniment[],
+  specialNote?: string
 ): string => {
   const accompString = accompaniments
     ? accompaniments
@@ -35,7 +37,10 @@ const generateUniqueId = (
         .sort()
         .join("-")
     : "no-accompaniments";
-  return `${menuItemId}-${accompString}`;
+  const noteString = specialNote
+    ? `-note-${specialNote.replace(/\s/g, "")}`
+    : "";
+  return `${menuItemId}-${accompString}${noteString}`;
 };
 
 export const useCartStore = create<CartStore>()(
@@ -59,10 +64,15 @@ export const useCartStore = create<CartStore>()(
         description: string,
         price: string,
         quantity: number,
-        accompaniments?: Accompaniment[]
+        accompaniments?: Accompaniment[],
+        specialNote?: string
       ) => {
         const { removePopUp } = usePopUpStore.getState();
-        const uniqueId = generateUniqueId(menuItemId, accompaniments);
+        const uniqueId = generateUniqueId(
+          menuItemId,
+          accompaniments,
+          specialNote
+        );
 
         const cartItem = {
           uniqueId,
@@ -75,6 +85,7 @@ export const useCartStore = create<CartStore>()(
           },
           quantity: quantity,
           accompaniments: accompaniments,
+          specialNote: specialNote,
         };
 
         set((state) => {

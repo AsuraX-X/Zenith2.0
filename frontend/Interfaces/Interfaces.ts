@@ -69,6 +69,7 @@ export interface OrderItem {
   quantity: number;
   _id?: string;
   accompaniments?: Accompaniment[];
+  specialNote?: string;
 }
 
 export interface Order {
@@ -119,6 +120,7 @@ export interface cartItem {
   menuItem: MenuItem2;
   quantity: number;
   accompaniments?: Accompaniment[];
+  specialNote?: string;
 }
 
 export interface NewUser {

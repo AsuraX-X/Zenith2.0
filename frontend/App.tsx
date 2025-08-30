@@ -3,6 +3,7 @@ import Home from "./routes/Home";
 import Menu from "./routes/Menu";
 import Cart from "./routes/Cart";
 import Orders from "./routes/Orders";
+import CurrentReservations from "./routes/CurrentReservations";
 import AdminOrders from "./admin/AdminOrders";
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
@@ -32,6 +33,7 @@ const App = () => {
         <Route path="/menu" element={<Menu />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/current-reservations" element={<CurrentReservations />} />
         <Route path="/reservation" element={<Reservation />} />
         {user && user?.role === "admin" && (
           <Route path="/admin">

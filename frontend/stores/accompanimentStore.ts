@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Accompaniment } from "../Interfaces/Interfaces";
+import { apiUrl } from "../config/constants";
 
 interface AccompanimentStore {
   accompaniments: Accompaniment[];
@@ -28,7 +29,7 @@ export const useAccompanimentStore = create<AccompanimentStore>((set, get) => ({
   fetchAccompaniments: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/accompaniments");
+      const response = await fetch(apiUrl("accompaniments"));
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -47,7 +48,7 @@ export const useAccompanimentStore = create<AccompanimentStore>((set, get) => ({
   createAccompaniment: async (accompaniment) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/admin/create-accompaniment", {
+      const response = await fetch(apiUrl("admin/create-accompaniment"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(accompaniment),
@@ -81,7 +82,7 @@ export const useAccompanimentStore = create<AccompanimentStore>((set, get) => ({
   updateAccompaniment: async (id, updates) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/admin/update-accompaniment", {
+      const response = await fetch(apiUrl("admin/update-accompaniment"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...updates }),
@@ -119,7 +120,7 @@ export const useAccompanimentStore = create<AccompanimentStore>((set, get) => ({
   deleteAccompaniment: async (id) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/admin/delete-accompaniment/${id}`, {
+      const response = await fetch(apiUrl(`admin/delete-accompaniment/${id}`), {
         method: "DELETE",
       });
 

@@ -4,6 +4,7 @@ import { BiCheck, BiPhone } from "react-icons/bi";
 import { motion } from "motion/react";
 import { useState, useEffect, useCallback } from "react";
 import { usePopUpStore } from "../../stores/popUpStore";
+import { apiUrl } from "../../config/constants";
 
 const OrderCard = ({
   order,
@@ -16,7 +17,7 @@ const OrderCard = ({
 }) => {
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [time, setTime] = useState(0);
-  const { addAlert } = usePopUpStore();
+  const { addAlert, setAlertAction, confirm } = usePopUpStore();
 
   const key = import.meta.env.VITE_LOCATIONIQ_KEY;
   const RESTAURANT_LON = -0.16507375965959975;
@@ -143,7 +144,7 @@ const OrderCard = ({
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/user/order/${order._id}`);
+        const response = await fetch(apiUrl(`user/order/${order._id}`));
         if (response.ok) {
           const updatedOrder = await response.json();
           setCurrentOrder(updatedOrder);
@@ -203,7 +204,7 @@ const OrderCard = ({
 
   const handleConfirmReceived = async (orderId: string) => {
     try {
-      const res = await fetch("/api/user/mark-finished", {
+      const res = await fetch(apiUrl("user/mark-finished"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId }),
@@ -219,41 +220,41 @@ const OrderCard = ({
     }
   };
 
-  const handleCancelOrder = async (orderId: string) => {
+  const handleCancelOrder = (orderId: string) => {
     // Show confirmation dialog
-    const isConfirmed = window.confirm(
+
+    addAlert(
       "Are you sure you want to cancel this order? This action cannot be undone."
     );
+    confirm();
 
-    if (!isConfirmed) {
-      return;
-    }
+    setAlertAction(async () => {
+      try {
+        const res = await fetch(apiUrl(`user/cancel-order/${orderId}`), {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
 
-    try {
-      const res = await fetch(`/api/user/cancel-order/${orderId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (res.ok) {
-        addAlert("Order cancelled successfully.");
-        // Notify parent component to refresh the orders list
-        if (onOrderUpdate) {
-          onOrderUpdate({ ...currentOrder, cancelled: true });
+        if (res.ok) {
+          addAlert("Order cancelled successfully.");
+          // Notify parent component to refresh the orders list
+          if (onOrderUpdate) {
+            onOrderUpdate({ ...currentOrder, cancelled: true });
+          }
+          // Optionally, you could also reload the page or remove the order from view
+          window.location.reload();
+        } else {
+          const errorText = await res.text();
+          console.error("Server response:", errorText);
+          addAlert("Failed to cancel order. Please try again.");
         }
-        // Optionally, you could also reload the page or remove the order from view
-        window.location.reload();
-      } else {
-        const errorText = await res.text();
-        console.error("Server response:", errorText);
-        addAlert("Failed to cancel order. Please try again.");
+      } catch (error) {
+        console.error("Cancel order error:", error);
+        addAlert(
+          "Failed to cancel order. Please check your connection and try again."
+        );
       }
-    } catch (error) {
-      console.error("Cancel order error:", error);
-      addAlert(
-        "Failed to cancel order. Please check your connection and try again."
-      );
-    }
+    });
   };
 
   return (
@@ -376,32 +377,40 @@ const OrderCard = ({
                   key={item.menuItem?._id || item._id}
                   className="flex justify-between items-start border-b border-gray-600 pb-2 last:border-b-0 last:pb-0"
                 >
-                  <p>
-                    <span className="text-gray-100 text-sm sm:text-base flex-1 leading-tight">
-                      {item.menuItem && item.menuItem.name
-                        ? item.menuItem.name
-                        : "Unknown Item"}
-                    </span>
-                    {item.accompaniments && (
-                      <span>
-                        {" "}
-                        with{" "}
-                        {item.accompaniments.map((accompaniment) => (
-                          <span key={accompaniment._id}>
-                            {accompaniment.name}
-                            {accompaniment !==
-                              item.accompaniments?.[
-                                item.accompaniments.length - 1
-                              ] &&
-                              item.accompaniments &&
-                              item.accompaniments.length > 1 &&
-                              ", "}
-                          </span>
-                        ))}
+                  <div className="flex-1">
+                    <p>
+                      <span className="text-gray-100 text-sm sm:text-base leading-tight">
+                        {item.menuItem && item.menuItem.name
+                          ? item.menuItem.name
+                          : "Unknown Item"}
                       </span>
+                      {item.accompaniments &&
+                        item.accompaniments.length > 0 && (
+                          <span>
+                            {" "}
+                            with{" "}
+                            {item.accompaniments.map((accompaniment) => (
+                              <span key={accompaniment._id}>
+                                {accompaniment.name}
+                                {accompaniment !==
+                                  item.accompaniments?.[
+                                    item.accompaniments.length - 1
+                                  ] &&
+                                  item.accompaniments &&
+                                  item.accompaniments.length > 1 &&
+                                  ", "}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                    </p>
+                    {item.specialNote && (
+                      <p className="text-yellow-400 text-xs sm:text-sm italic mt-1">
+                        Note: {item.specialNote}
+                      </p>
                     )}
-                  </p>
-                  <span className="font-semibold text-[#ff1200] text-sm sm:text-base whitespace-nowrap">
+                  </div>
+                  <span className="font-semibold text-[#ff1200] text-sm sm:text-base whitespace-nowrap ml-2">
                     × {item.quantity}
                   </span>
                 </li>

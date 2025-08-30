@@ -14,6 +14,7 @@ import {
 } from "react-icons/bi";
 import AdminSideBar from "./AdminSideBar";
 import { usePopUpStore } from "../stores/popUpStore";
+import { apiUrl } from "../config/constants";
 
 interface Reservation {
   _id: string;
@@ -47,7 +48,7 @@ const AdminReservations = () => {
 
   const fetchReservations = async () => {
     try {
-      const response = await fetch("http://localhost:3000/admin/reservations");
+      const response = await fetch(apiUrl("admin/reservations"));
       const data = await response.json();
 
       setReservations(data.reservations);
@@ -67,7 +68,7 @@ const AdminReservations = () => {
     setUpdatingStatus(reservationId);
     try {
       const response = await fetch(
-        "http://localhost:3000/admin/reservation-status",
+        apiUrl("admin/reservation-status"),
         {
           method: "POST",
           headers: {

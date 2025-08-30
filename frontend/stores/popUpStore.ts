@@ -4,15 +4,17 @@ interface PopUpState {
   popUpCount: number;
   alert: boolean;
   alertText: string;
+  confirmation: boolean;
 }
 
 interface PopUpActions {
   addPopUp: () => void;
   removePopUp: () => void;
   addAlert: (alert: string) => void;
-  removeAlert: () => void;
+  removeAlert: (confirm?: boolean) => void;
   alertAction: () => void;
   setAlertAction: (action: () => void) => void;
+  confirm: () => void;
 }
 
 type PopUpStore = PopUpState & PopUpActions;
@@ -24,6 +26,8 @@ export const usePopUpStore = create<PopUpStore>()((set, get) => ({
   alertText: "",
 
   alert: false,
+
+  confirmation: false,
 
   // Actions
   addPopUp: () => {
@@ -50,9 +54,14 @@ export const usePopUpStore = create<PopUpStore>()((set, get) => ({
     set(() => ({ alertAction: action }));
   },
 
-  removeAlert: () => {
-    get().alertAction();
+  confirm: () => {
+    set((state)=>({confirmation: !state.confirmation}))
+  },
+
+  removeAlert: (confirm = true) => {
+    confirm && get().alertAction();
     set(() => ({ alert: false }));
+    set(() => ({ alertAction: () => {} }));
     get().removePopUp();
   },
 }));

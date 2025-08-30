@@ -4,6 +4,7 @@ import OrderCard from "./OrderCard";
 import { motion } from "motion/react";
 import type { Order } from "../../Interfaces/Interfaces";
 import { useUserStore } from "../../stores/userStore";
+import { apiUrl } from "../../config/constants";
 
 const OrderContent = () => {
   const user = useUserStore((state) => state.user);
@@ -23,7 +24,7 @@ const OrderContent = () => {
     if (user && (user._id || user.id)) {
       const userId = user._id || user.id;
       try {
-        const activeRes = await fetch(`/api/user-orders/${userId}`);
+        const activeRes = await fetch(apiUrl(`user-orders/${userId}`));
         if (!activeRes.ok)
           throw new Error(`HTTP error! status: ${activeRes.status}`);
         const activeData = await activeRes.json();
@@ -36,7 +37,7 @@ const OrderContent = () => {
       }
 
       try {
-        const finishedRes = await fetch(`/api/user-finished-orders/${userId}`);
+        const finishedRes = await fetch(apiUrl(`user-finished-orders/${userId}`));
         if (!finishedRes.ok)
           throw new Error(`HTTP error! status: ${finishedRes.status}`);
         const finishedData = await finishedRes.json();
@@ -86,7 +87,7 @@ const OrderContent = () => {
   return (
     <div className="mt-20 px-4">
       <div className="border-b border-b-[#ff1200] pb-2 mb-8 flex justify-between items-center">
-        <h1 className="text-4xl font-bold">Orders</h1>
+        <h1 className="sm:text-4xl text-2xl font-bold">Orders</h1>
         <div className="rounded-lg space-x-2 sm:p-2 text-xs sm:text-base flex items-center">
           <motion.button
             initial={{ backgroundColor: "#0e1113 " }}

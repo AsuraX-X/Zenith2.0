@@ -1,12 +1,19 @@
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { BiChevronDown, BiUserCircle, BiMenu, BiX } from "react-icons/bi";
+import {
+  BiChevronDown,
+  BiUserCircle,
+  BiMenu,
+  BiX,
+  BiCalendar,
+} from "react-icons/bi";
 import { FiShoppingCart } from "react-icons/fi";
 import { useCartStore } from "../../stores/cartStore";
 import { useUserStore } from "../../stores/userStore";
 import { useAuthStore } from "../../stores/authStore";
 import { usePopUpStore } from "../../stores/popUpStore";
+import { useReservationStore } from "../../stores/reservationStore";
 
 const Header = () => {
   const { setAuth } = useAuthStore();
@@ -16,12 +23,24 @@ const Header = () => {
   const user = useUserStore((state) => state.user);
   const { clearCart } = useCartStore();
   const cart = useCartStore((state) => state.cart);
+  const { reservations, fetchUserReservations, clearReservations } =
+    useReservationStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user reservations when user changes
+  useEffect(() => {
+    if (user?.id || user?._id) {
+      const userId = user._id || user.id;
+      if (userId) {
+        fetchUserReservations(userId);
+      }
+    }
+  }, [user?.id, user?._id, fetchUserReservations]);
 
   const routes = [
     { name: "HOME", path: "/" },
@@ -92,6 +111,27 @@ const Header = () => {
             </span>
           </NavLink>
           <div className="flex items-center gap-2">
+            {user &&
+              reservations.length > 0 &&
+              location.pathname !== "/current-reservations" && (
+                <div className="relative">
+                  <div className="bg-[#ff1200] rounded-full absolute size-3 flex justify-center items-center right-[-5%] top-[-10%] z-10">
+                    <p className="text-xs leading-none">
+                      {reservations.length}
+                    </p>
+                  </div>
+                  <NavLink
+                    onClick={() => {
+                      window.scrollTo(0, 0);
+                    }}
+                    to="/current-reservations"
+                  >
+                    <button className="cursor-pointer flex items-center py-1 px-2 border border-[#ff1200] rounded-lg bg-[#0e1113]">
+                      <BiCalendar size={16} />
+                    </button>
+                  </NavLink>
+                </div>
+              )}
             {user && cart.length > 0 && location.pathname !== "/cart" && (
               <div className="relative">
                 <div className="bg-[#ff1200] rounded-full absolute size-3 flex justify-center items-center right-[-5%] top-[-10%] z-10">
@@ -158,6 +198,27 @@ const Header = () => {
           <div className="flex justify-end flex-1">
             {user ? (
               <div className="flex relative min-w-0 justify-end gap-2 sm:gap-2">
+                {reservations.length > 0 &&
+                  location.pathname !== "/current-reservations" && (
+                    <div className="relative">
+                      <div className="bg-[#ff1200] rounded-full absolute size-3 sm:size-4 flex justify-center items-center right-[-5%] top-[-10%] z-10">
+                        <p className="text-xs leading-none">
+                          {reservations.length}
+                        </p>
+                      </div>
+                      <NavLink
+                        onClick={() => {
+                          window.scrollTo(0, 0);
+                        }}
+                        to="/current-reservations"
+                      >
+                        <button className="cursor-pointer flex items-center py-1 px-2 sm:py-2 sm:px-4 border border-[#ff1200] rounded-lg gap-1 sm:gap-2 bg-[#0e1113] text-xs sm:text-sm">
+                          <BiCalendar size={16} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Reservations</span>
+                        </button>
+                      </NavLink>
+                    </div>
+                  )}
                 {cart.length > 0 && location.pathname !== "/cart" && (
                   <div className="relative">
                     <div className="bg-[#ff1200] rounded-full absolute size-3 sm:size-4 flex justify-center items-center right-[-5%] top-[-10%] z-10">
@@ -200,6 +261,7 @@ const Header = () => {
                         setUser(null);
                         navigate("/");
                         clearCart();
+                        clearReservations();
                       }}
                       className="pt-2 text-left w-full hover:text-[#ff1200] transition"
                     >
@@ -248,36 +310,36 @@ const Header = () => {
             {routes.map(
               (route) =>
                 route !== null && (
-                  <motion.div
+                  <NavLink
                     key={route?.path}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor:
-                        location.pathname === route?.path
-                          ? "#ff1200"
-                          : "#232426",
+                    onClick={() => {
+                      window.scrollTo(0, 0);
                     }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.2 }}
-                    animate={{
-                      backgroundColor:
-                        location.pathname === route?.path ||
-                        (route?.path === "/admin/orders" &&
-                          location.pathname === "/admin")
-                          ? "#ff1200"
-                          : "transparent",
-                    }}
-                    className="text-left py-2 px-3 rounded-lg"
+                    to={route?.path}
                   >
-                    <NavLink
-                      onClick={() => {
-                        window.scrollTo(0, 0);
+                    <motion.div
+                      whileHover={{
+                        scale: 1.02,
+                        backgroundColor:
+                          location.pathname === route?.path
+                            ? "#ff1200"
+                            : "#232426",
                       }}
-                      to={route?.path}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.2 }}
+                      animate={{
+                        backgroundColor:
+                          location.pathname === route?.path ||
+                          (route?.path === "/admin/orders" &&
+                            location.pathname === "/admin")
+                            ? "#ff1200"
+                            : "transparent",
+                      }}
+                      className="text-left py-2 px-3 rounded-lg"
                     >
                       {route?.name}
-                    </NavLink>
-                  </motion.div>
+                    </motion.div>
+                  </NavLink>
                 )
             )}
           </div>
@@ -293,6 +355,7 @@ const Header = () => {
                 onClick={() => {
                   setUser(null);
                   clearCart();
+                  clearReservations();
                   navigate("/");
                   setIsMobileMenuOpen(false);
                 }}

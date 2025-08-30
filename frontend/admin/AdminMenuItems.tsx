@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import type { MenuItem, Accompaniment } from "../Interfaces/Interfaces";
+import type { MenuItem } from "../Interfaces/Interfaces";
 import AdminSideBar from "./AdminSideBar";
 import AdminMenuItemCard from "../components/admin/AdminMenuItemCard";
 import { useAdminStore } from "../stores/adminStore";
 import { useRefreshMenuEffect } from "../hooks";
 import { useAnimationStore } from "../stores/animationStore";
 import { useAccompanimentStore } from "../stores/accompanimentStore";
-import { BiTrash } from "react-icons/bi";
 import { uploadImageToCloudinary } from "../services/cloudinary";
+import { apiUrl } from "../config/constants";
 
 const AdminMenuItems = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,13 +30,8 @@ const AdminMenuItems = () => {
     fetchAccompaniments();
   }, [fetchAccompaniments]);
 
-  const {
-    addFilter,
-    handleChangeEdit,
-    handleChangeMenu,
-    handleEditItem,
-    handleUpdateItem,
-  } = useAdminStore();
+  const { addFilter, handleChangeEdit, handleChangeMenu, handleEditItem } =
+    useAdminStore();
 
   // Use separate selectors to avoid creating new objects and infinite loops
   const formData = useAdminStore((state) => state.formData);
@@ -110,7 +105,7 @@ const AdminMenuItems = () => {
       const allowedAccompaniments =
         selectedAccompaniments.length > 0 ? selectedAccompaniments : undefined;
 
-      const response = await fetch("/api/admin/create-menu-item", {
+      const response = await fetch(apiUrl("admin/create-menu-item"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -224,11 +219,14 @@ const AdminMenuItems = () => {
         updateData.imageUrl = imageUrl;
       }
 
-      const res = await fetch(`/api/admin/update-menu-item/${editItem._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
+      const res = await fetch(
+        apiUrl(`admin/update-menu-item/${editItem._id}`),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        }
+      );
 
       const result = await res.json();
       if (result.success) {
@@ -540,7 +538,11 @@ const AdminMenuItems = () => {
                     {editItem.image && !imagePreview && (
                       <div className="relative">
                         <img
-                          src={typeof editItem.image === 'string' ? editItem.image : URL.createObjectURL(editItem.image)}
+                          src={
+                            typeof editItem.image === "string"
+                              ? editItem.image
+                              : URL.createObjectURL(editItem.image)
+                          }
                           alt="Current image"
                           className="w-32 h-32 object-cover rounded-lg border border-gray-600"
                         />

@@ -7,6 +7,7 @@ import type {
   Order,
 } from "../Interfaces/Interfaces";
 import { useAnimationStore } from "./animationStore";
+import { apiUrl } from "../config/constants";
 
 interface adminState {
   message: string;
@@ -70,7 +71,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
   // Menu management
   refreshMenu: async () => {
     try {
-      const res = await fetch("/api/menu");
+      const res = await fetch(apiUrl("menu"));
       const data = await res.json();
       const uniqueTypes = Array.from(
         new Set(data.map((item: MenuItem) => item.category))
@@ -127,7 +128,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
     try {
       console.log("Creating user:", newUser); // Debug log
 
-      const res = await fetch("/api/admin/create-user", {
+      const res = await fetch(apiUrl("admin/create-user"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newUser),
@@ -183,7 +184,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
     try {
-      const res = await fetch(`/api/admin/delete-menu-item/${id}`, {
+      const res = await fetch(apiUrl(`admin/delete-menu-item/${id}`), {
         method: "DELETE",
       });
       const result = await res.json();
@@ -225,17 +226,20 @@ export const useAdminStore = create<adminStore>((set, get) => ({
           ? await convertToBase64(editItem.image)
           : editItem.image || "";
 
-      const res = await fetch(`/api/admin/update-menu-item/${editItem._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editItem.name,
-          price: parseFloat(editItem.price.toString()),
-          category: editItem.category,
-          imageBase64,
-          accompaniments: editItem.accompaniments || [],
-        }),
-      });
+      const res = await fetch(
+        apiUrl(`admin/update-menu-item/${editItem._id}`),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: editItem.name,
+            price: parseFloat(editItem.price.toString()),
+            category: editItem.category,
+            imageBase64,
+            accompaniments: editItem.accompaniments || [],
+          }),
+        }
+      );
 
       const result = await res.json();
       if (result.success) {
@@ -299,7 +303,7 @@ export const useAdminStore = create<adminStore>((set, get) => ({
     }
 
     try {
-      const res = await fetch("/api/admin/create-menu-item", {
+      const res = await fetch(apiUrl("admin/create-menu-item"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -338,8 +342,8 @@ export const useAdminStore = create<adminStore>((set, get) => ({
   fetchOrders: async () => {
     try {
       const [activeRes, finishedRes] = await Promise.all([
-        fetch("/api/admin/orders"),
-        fetch("/api/admin/finished-orders"),
+        fetch(apiUrl("admin/orders")),
+        fetch(apiUrl("admin/finished-orders")),
       ]);
 
       const activeData = await activeRes.json();

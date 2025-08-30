@@ -4,12 +4,14 @@ import { BiFilter } from "react-icons/bi";
 import { motion } from "motion/react";
 import { BsDot } from "react-icons/bs";
 import type { MenuItem } from "../../Interfaces/Interfaces";
+import { apiUrl } from "../../config/constants";
 
 const FullMenu = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
   const [filter, setFilter] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState("");
   const popupRef = useRef<HTMLDivElement>(null);
@@ -36,11 +38,11 @@ const FullMenu = () => {
   const fetchMenu = useCallback(async () => {
     setStatus("load menu");
     try {
-      const res = await fetch("/api/menu");
+      const res = await fetch(apiUrl("menu"));
       const data: MenuItem[] = await res.json();
       setMenuItems(data);
       console.log(data);
-      
+
       const uniqueTypes = Array.from(
         new Set(data.map((item: MenuItem) => item.category))
       );
@@ -73,6 +75,42 @@ const FullMenu = () => {
     }
   }, [filter, categories]);
 
+  // Filter menu items based on search term
+  const getFilteredMenuItems = (category: string) => {
+    let filtered = menuItems.filter(
+      (item: MenuItem) => item.category === category
+    );
+
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (item: MenuItem) =>
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.description &&
+            item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    return filtered;
+  };
+
+  // Get categories that have items matching the search
+  const getCategoriesWithResults = () => {
+    if (!searchTerm.trim()) {
+      return uniqueCategories;
+    }
+
+    return uniqueCategories.filter((category) => {
+      return menuItems
+        .filter((item: MenuItem) => item.category === category)
+        .some(
+          (item: MenuItem) =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.description &&
+              item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    });
+  };
+
   return (
     <div className="sm:px-30 px-4">
       <section className="flex flex-col justify-center items-center pb-4">
@@ -81,7 +119,7 @@ const FullMenu = () => {
           Delicious. Bold. Unforgettable.
         </p>
       </section>
-      <section className="relative">
+      <section className="relative flex justify-between items-center">
         <button
           ref={buttonRef}
           onClick={() => setIsOpen((prev) => !prev)}
@@ -114,26 +152,52 @@ const FullMenu = () => {
             </div>
           </div>
         </motion.div>
+        <input
+          type="text"
+          className="border border-gray-400 rounded-lg py-2 px-3 w-64"
+          placeholder="Search menu items..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </section>
       <section className="">
-        {uniqueCategories.length > 0 ? (
-          uniqueCategories.map((category, i) => (
-            <div className="py-4" key={i}>
-              <h1 className="text-xl font-bold border-b-2 border-b-[#ff2100] pb-2 mb-8">
-                {category.toUpperCase()}
-              </h1>
-              <div className="grid  grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
-                {menuItems
-                  .filter((item: MenuItem) => item.category === category)
-                  .map((item: MenuItem) => (
-                    <FoodCard
-                      key={item._id}
-                      menuItem={item}
-                    />
+        {getCategoriesWithResults().length > 0 ? (
+          getCategoriesWithResults().map((category, i) => {
+            const filteredItems = getFilteredMenuItems(category);
+            return (
+              <div className="py-4" key={i}>
+                <h1 className="text-xl font-bold border-b-2 border-b-[#ff2100] pb-2 mb-8">
+                  {category.toUpperCase()}
+                  {searchTerm.trim() && (
+                    <span className="text-sm font-normal text-gray-400 ml-2">
+                      ({filteredItems.length} result
+                      {filteredItems.length !== 1 ? "s" : ""})
+                    </span>
+                  )}
+                </h1>
+                <div className="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
+                  {filteredItems.map((item: MenuItem) => (
+                    <FoodCard key={item._id} menuItem={item} />
                   ))}
+                </div>
               </div>
+            );
+          })
+        ) : searchTerm.trim() ? (
+          <div className="h-[65vh] flex justify-center items-center gap-2">
+            <div className="flex justify-center items-center flex-col gap-4">
+              <p className="text-3xl text-gray-400">No menu items found</p>
+              <p className="text-xl text-gray-500">
+                Try searching for "{searchTerm}" with different keywords
+              </p>
+              <button
+                className="bg-[#ff1200] rounded-lg px-4 py-2 cursor-pointer"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Search
+              </button>
             </div>
-          ))
+          </div>
         ) : (
           <div className="h-[65vh] flex justify-center items-center gap-2">
             {status === "load menu" && (
@@ -178,4 +242,4 @@ const FullMenu = () => {
   );
 };
 
-export default FullMenu
+export default FullMenu;

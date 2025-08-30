@@ -2,9 +2,10 @@ import { motion } from "motion/react";
 import { usePopUpStore } from "../../stores/popUpStore";
 
 const Alert = () => {
-  const { removeAlert } = usePopUpStore();
+  const { removeAlert, confirm } = usePopUpStore();
   const alert = usePopUpStore((state) => state.alert);
   const alertText = usePopUpStore((state) => state.alertText);
+  const confirmation = usePopUpStore((state) => state.confirmation);
 
   return (
     <motion.div
@@ -23,12 +24,25 @@ const Alert = () => {
         className="flex flex-col gap-4 px-6 justify-center items-center bg-[#0e1113] sm:w-125 h-fit py-4 w-80 rounded-lg"
       >
         <p className="sm:text-[1.5rem]">{alertText}</p>
-        <button
-          onClick={removeAlert}
-          className="bg-[#ff2100] px-4 py-2 rounded-full"
-        >
-          Continue
-        </button>
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => removeAlert()}
+            className="bg-[#ff2100] px-4 py-2 rounded-full"
+          >
+            Continue
+          </button>
+          {confirmation && (
+            <button
+              onClick={() => {
+                removeAlert(false);
+                confirm();
+              }}
+              className="border border-[#ff2100] px-4 py-2 rounded-full"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -1,6 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const cron = require("node-cron");
+
+// Load environment variables
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
@@ -201,6 +205,85 @@ app.post("/signup", async (req, res) => {
     const user = new User({ name, email, password, phone });
     await user.save();
 
+    // Send welcome email
+    try {
+      const sendEmail = require("./utils/sendEmail");
+      const welcomeEmailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear-gradient(135deg, #ff1200, #ff4000); color: white; padding: 30px; text-align: center; }
+            .header h1 { margin: 0; font-size: 32px; font-weight: bold; }
+            .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }
+            .content { padding: 40px 30px; }
+            .content h2 { color: #333; margin-bottom: 20px; font-size: 24px; }
+            .content p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+            .features { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .features h3 { color: #ff1200; margin-bottom: 15px; }
+            .features ul { margin: 0; padding-left: 20px; }
+            .features li { color: #555; margin-bottom: 8px; }
+            .cta { text-align: center; margin: 30px 0; }
+            .cta a { background: linear-gradient(135deg, #ff1200, #ff4000); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; }
+            .footer { background-color: #333; color: white; text-align: center; padding: 20px; }
+            .footer p { margin: 5px 0; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Welcome to DE BLISS!</h1>
+              <p>Serving love in every dish</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${name}! 👋</h2>
+              <p>Welcome to the DE BLISS family! We're thrilled to have you join our community of food lovers who appreciate authentic flavors and exceptional dining experiences.</p>
+              
+              <div class="features">
+                <h3>What you can do with your account:</h3>
+                <ul>
+                  <li>🍽️ Browse our signature menu with 50+ delicious dishes</li>
+                  <li>🛒 Place orders for delivery or pickup</li>
+                  <li>📅 Make table reservations for special occasions</li>
+                  <li>⭐ Rate and review your favorite meals</li>
+                  <li>🎁 Get exclusive offers and early access to new dishes</li>
+                  <li>📱 Enjoy our mobile-optimized ordering experience</li>
+                </ul>
+              </div>
+              
+              <p>Our team of passionate chefs is ready to serve you authentic Ghanaian cuisine made with the finest ingredients and lots of love.</p>
+              
+              <div class="cta">
+                <a href="http://localhost:5173/menu">Start Ordering Now</a>
+              </div>
+              
+              <p>If you have any questions or need assistance, feel free to reach out to our friendly customer support team.</p>
+              
+              <p>Thank you for choosing DE BLISS. We can't wait to serve you!</p>
+            </div>
+            <div class="footer">
+              <p><strong>DE BLISS Restaurant</strong></p>
+              <p>Serving 10K+ happy customers with love and tradition</p>
+              <p>Contact us: debliss2024@gmail.com | Phone: +233 25 628 6634</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await sendEmail(
+        email,
+        "🎉 Welcome to DE BLISS - Your culinary journey begins!",
+        welcomeEmailHtml
+      );
+      console.log(`Welcome email sent to ${email}`);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't fail the registration if email fails
+    }
+
     const token = require("./utils/generateToken")(user._id);
 
     res.json({
@@ -210,6 +293,7 @@ app.post("/signup", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -253,6 +337,7 @@ app.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -1282,7 +1367,193 @@ app.post("/admin/order-status", async (req, res) => {
     const update = {};
     update[statusKey] = value;
 
+    // Get the order with user details before updating
+    const order = await Order.findById(orderId).populate(
+      "userId",
+      "name email"
+    );
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Update the order
     await Order.findByIdAndUpdate(orderId, { $set: update });
+
+    // Send email notifications for specific status changes
+    try {
+      const sendEmail = require("./utils/sendEmail");
+
+      if (statusKey === "confirmed" && value && order.userId?.email) {
+        // Send order confirmation email
+        const confirmationEmailHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+              .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+              .header { background: linear-gradient(135deg, #ff1200, #ff4000); color: white; padding: 30px; text-align: center; }
+              .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+              .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }
+              .content { padding: 30px; }
+              .content h2 { color: #333; margin-bottom: 20px; font-size: 22px; }
+              .content p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .order-info { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff1200; }
+              .order-info h3 { color: #ff1200; margin-bottom: 10px; }
+              .footer { background-color: #333; color: white; text-align: center; padding: 20px; }
+              .footer p { margin: 5px 0; font-size: 14px; }
+              .status-badge { background: #28a745; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Order Confirmed! ✅</h1>
+                <p>Your order is being prepared with love</p>
+              </div>
+              <div class="content">
+                <h2>Hello ${order.userId.name}! 👋</h2>
+                <p>Great news! Your order has been confirmed and our kitchen team is now preparing your delicious meal.</p>
+                
+                <div class="order-info">
+                  <h3>Order Details:</h3>
+                  <p><strong>Order ID:</strong> ${orderId}</p>
+                  <p><strong>Status:</strong> <span class="status-badge">Confirmed</span></p>
+                  <p><strong>Delivery Method:</strong> ${
+                    order.deliveryMethod
+                  }</p>
+                  <p><strong>Contact:</strong> ${order.contact}</p>
+                  ${
+                    order.deliveryMethod === "delivery" && order.location
+                      ? `<p><strong>Delivery Address:</strong> ${order.location.name}</p>`
+                      : ""
+                  }
+                </div>
+                
+                <p>Your order is now in our kitchen where our skilled chefs are preparing it with the finest ingredients and lots of care.</p>
+                
+                <p><strong>What's next?</strong></p>
+                <ul>
+                  <li>🍳 Your meal is being prepared</li>
+                  <li>📦 It will be packed securely</li>
+                  ${
+                    order.deliveryMethod === "delivery"
+                      ? "<li>🚗 Our rider will deliver it to your location</li>"
+                      : "<li>📍 You can pick it up at our restaurant</li>"
+                  }
+                  <li>📱 You'll receive updates throughout the process</li>
+                </ul>
+                
+                <p>Thank you for choosing DE BLISS. We can't wait for you to enjoy your meal!</p>
+              </div>
+              <div class="footer">
+                <p><strong>DE BLISS Restaurant</strong></p>
+                <p>Contact us: debliss2024@gmail.com | Phone: +233 25 628 6634</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        await sendEmail(
+          order.userId.email,
+          "🎉 Order Confirmed - DE BLISS is preparing your meal!",
+          confirmationEmailHtml
+        );
+        console.log(
+          `Order confirmation email sent to ${order.userId.email} for order ${orderId}`
+        );
+      }
+
+      if (
+        statusKey === "outForDelivery" &&
+        value &&
+        order.userId?.email &&
+        order.deliveryMethod === "delivery"
+      ) {
+        // Send out for delivery email
+        const deliveryEmailHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+              .container { max-width: 600px; margin: 0 auto; background-color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+              .header { background: linear-gradient(135deg, #007BFF, #0056b3); color: white; padding: 30px; text-align: center; }
+              .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+              .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }
+              .content { padding: 30px; }
+              .content h2 { color: #333; margin-bottom: 20px; font-size: 22px; }
+              .content p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .delivery-info { background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007BFF; }
+              .delivery-info h3 { color: #007BFF; margin-bottom: 10px; }
+              .footer { background-color: #333; color: white; text-align: center; padding: 20px; }
+              .footer p { margin: 5px 0; font-size: 14px; }
+              .status-badge { background: #007BFF; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+              .eta { background: #ff8c00; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; text-align: center; margin: 15px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Your Order is On the Way! 🚗</h1>
+                <p>Our rider is heading to your location</p>
+              </div>
+              <div class="content">
+                <h2>Hello ${order.userId.name}! 👋</h2>
+                <p>Exciting news! Your delicious meal has been prepared and packed, and our delivery rider is now on the way to your location.</p>
+                
+                <div class="delivery-info">
+                  <h3>Delivery Details:</h3>
+                  <p><strong>Order ID:</strong> ${orderId}</p>
+                  <p><strong>Status:</strong> <span class="status-badge">Out for Delivery</span></p>
+                  <p><strong>Delivery Address:</strong> ${
+                    order.location?.name || "Your specified location"
+                  }</p>
+                  <p><strong>Contact:</strong> ${order.contact}</p>
+                </div>
+                
+                <div class="eta">
+                  <p style="margin: 0;">Estimated Delivery Time: 20-30 minutes</p>
+                </div>
+                
+                <p><strong>What to expect:</strong></p>
+                <ul>
+                  <li>🚗 Our rider is en route to your location</li>
+                  <li>📱 The rider will contact you upon arrival</li>
+                  <li>🍽️ Your meal is packed securely and will arrive hot</li>
+                  <li>💳 Payment will be collected upon delivery (if not paid online)</li>
+                </ul>
+                
+                <p><strong>Contact Information:</strong></p>
+                <p>If you need to reach our delivery team or make any changes, please contact us immediately at:</p>
+                <p>📞 <strong>+233 25 628 6634</strong></p>
+                
+                <p>Thank you for choosing DE BLISS. Enjoy your meal!</p>
+              </div>
+              <div class="footer">
+                <p><strong>DE BLISS Restaurant</strong></p>
+                <p>Contact us: debliss2024@gmail.com | Phone: +233 25 628 6634</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        await sendEmail(
+          order.userId.email,
+          "🚗 Your Order is Out for Delivery - DE BLISS",
+          deliveryEmailHtml
+        );
+        console.log(
+          `Delivery notification email sent to ${order.userId.email} for order ${orderId}`
+        );
+      }
+    } catch (emailError) {
+      console.error("Failed to send status update email:", emailError);
+      // Don't fail the status update if email fails
+    }
+
     res.json({ success: true, message: `Updated ${statusKey} to "${value}"` });
   } catch (err) {
     console.error("Failed to update status:", err);
@@ -1397,6 +1668,35 @@ app.delete("/admin/finished-orders/:orderId", async (req, res) => {
 
 // Cancel unconfirmed order (admin only)
 app.delete("/admin/cancel-order/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Check if order is already confirmed (prevent cancelling confirmed orders)
+    if (order.confirmed) {
+      return res.status(400).json({
+        error: "Cannot cancel order that has already been confirmed",
+      });
+    }
+
+    // Delete the order
+    await Order.findByIdAndDelete(req.params.orderId);
+
+    res.json({
+      success: true,
+      message: "Order cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Cancel order error:", error);
+    res.status(500).json({ error: "Failed to cancel order" });
+  }
+});
+
+// Cancel unconfirmed order (user)
+app.delete("/user/cancel-order/:orderId", async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId);
 
@@ -1749,6 +2049,100 @@ app.get("/reservation/:id", async (req, res) => {
   }
 });
 
+// Cancel a reservation
+app.patch("/reservation/:id/cancel", async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        error: "Reservation not found",
+      });
+    }
+
+    // Check if reservation can be cancelled (not already completed or cancelled)
+    if (
+      reservation.status === "completed" ||
+      reservation.status === "cancelled"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Cannot cancel a reservation that is already completed or cancelled",
+      });
+    }
+
+    // Check if cancellation is within allowed time (1 hour before reservation)
+    const reservationDateTime = new Date(
+      reservation.reservationDate + "T" + reservation.reservationTime
+    );
+    const now = new Date();
+    const oneHourBefore = new Date(
+      reservationDateTime.getTime() - 60 * 60 * 1000
+    );
+
+    if (now >= oneHourBefore) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Cannot cancel reservation less than 1 hour before the scheduled time",
+      });
+    }
+
+    // Update reservation status to cancelled
+    reservation.status = "cancelled";
+    await reservation.save();
+
+    res.json({
+      success: true,
+      message: "Reservation cancelled successfully",
+      reservation,
+    });
+  } catch (err) {
+    console.error("Error cancelling reservation:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to cancel reservation",
+    });
+  }
+});
+
+// Cleanup job for finished orders older than 7 days
+// Runs every day at 2:00 AM
+cron.schedule("0 2 * * *", async () => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const result = await FinishedDelivery.deleteMany({
+      createdAt: { $lt: sevenDaysAgo },
+    });
+
+    console.log(
+      `[${new Date().toISOString()}] Finished Orders Cleanup: Deleted ${
+        result.deletedCount
+      } finished orders older than 7 days`
+    );
+  } catch (error) {
+    console.error(
+      `[${new Date().toISOString()}] Finished Orders Cleanup Error:`,
+      error
+    );
+  }
+});
+
+console.log("🗄️ Finished orders cleanup job scheduled - runs daily at 2:00 AM");
+
+// Health check endpoint for Railway
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    message: "DE BLISS Backend API is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.listen(3000, "0.0.0.0", () => {
-  console.log("Backend running on /api");
+  console.log("Backend running");
 });

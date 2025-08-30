@@ -3,6 +3,7 @@ import RiderCard from "../components/Rider/RiderCard";
 import type { Order } from "../Interfaces/Interfaces";
 import { useUserStore } from "../stores/userStore";
 import Header from "../components/general/Header";
+import { apiUrl } from "../config/constants";
 
 export default function RiderDashboard() {
   const user = useUserStore((state) => state.user);
@@ -13,8 +14,8 @@ export default function RiderDashboard() {
   const fetchOrders = useCallback(async () => {
     try {
       const [curRes, finRes] = await Promise.all([
-        fetch(`/api/rider/current-orders/${user?._id || user?.id}`),
-        fetch(`/api/rider/finished-orders/${user?._id || user?.id}`),
+        fetch(apiUrl(`rider/current-orders/${user?._id || user?.id}`)),
+        fetch(apiUrl(`rider/finished-orders/${user?._id || user?.id}`)),
       ]);
 
       const curData = await curRes.json();
@@ -51,9 +52,7 @@ export default function RiderDashboard() {
     <div className="bg-[#0e1113] mt-20">
       <Header />
       <div className="flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-8">
-          Rider Dashboard
-        </h2>
+        <h2 className="text-3xl font-bold mb-8">Rider Dashboard</h2>
 
         <div className="flex justify-center mb-8">
           <div className="flex bg-[#181c1f] border border-gray-600 rounded-lg shadow-lg p-1">
