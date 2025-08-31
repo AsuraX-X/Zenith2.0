@@ -2,6 +2,8 @@
 
 A modern full-stack restaurant application built with React, TypeScript, and Node.js. Features include online ordering, table reservations, user authentication, comprehensive admin management, and automated delivery tracking.
 
+🌐 **Live Website**: [deblissfh.me](https://deblissfh.me)
+
 ## 🚀 Features
 
 - **Customer Portal**: Browse menu, place orders, make reservations with real-time validation
@@ -12,6 +14,7 @@ A modern full-stack restaurant application built with React, TypeScript, and Nod
 - **Automated Cleanup**: Background jobs for cleaning expired reservations and orders
 - **Form Validation**: Comprehensive input validation including Ghanaian phone numbers
 - **Password Security**: Visibility toggles and secure reset flow
+- **Email Notifications**: Automated order confirmations and status updates
 
 ## 🛠 Tech Stack
 
@@ -23,7 +26,7 @@ A modern full-stack restaurant application built with React, TypeScript, and Nod
 - Framer Motion for animations
 - React Router for navigation
 - React Icons for consistent iconography
-- Zustand for state management
+- React Helmet for SEO
 
 **Backend:**
 
@@ -32,55 +35,40 @@ A modern full-stack restaurant application built with React, TypeScript, and Nod
 - JWT Authentication
 - BCrypt for password hashing
 - Node-cron for automated cleanup jobs
+- Nodemailer for email notifications
 - Email verification system
 
 ## 📁 Project Structure
 
 ```
 Zenith/
-├── frontend/
-│   ├── App.tsx              # Main app component
-│   ├── main.tsx             # React entry point
-│   ├── admin/               # Admin dashboard components
-│   │   ├── AdminPanel.tsx   # Main admin interface
-│   │   ├── AdminOrders.tsx  # Order management
-│   │   └── RiderDashboard.tsx # Delivery tracking
-│   ├── auth/                # Authentication components
-│   │   ├── Login.tsx        # User login with password visibility
-│   │   ├── Register.tsx     # User registration
-│   │   ├── ForgotPassword.tsx # Email verification flow
-│   │   └── ResetPassword.tsx # Password reset with validation
-│   ├── components/          # Reusable UI components
-│   │   ├── cart/           # Shopping cart components
-│   │   ├── general/        # Header, footer, common components
-│   │   ├── home/           # Homepage sections
-│   │   ├── menu/           # Menu display and food cards
-│   │   └── order/          # Order management components
-│   ├── Context/            # React context providers
-│   │   ├── AuthContext.tsx # Authentication state
-│   │   ├── CartContext.tsx # Shopping cart state
-│   │   ├── PopUpContext.tsx # Modal management
-│   │   └── UserContext.tsx # User data management
-│   ├── routes/             # Page components
-│   │   ├── Home.tsx        # Homepage
-│   │   ├── Menu.tsx        # Menu page
-│   │   ├── Cart.tsx        # Shopping cart
-│   │   └── Orders.tsx      # Order history
-│   ├── services/           # API services
-│   │   └── api.ts          # API client functions
-│   └── assets/             # Static assets
-│       ├── fonts/          # Custom fonts
-│       └── images/         # Images and graphics
-├── backend/                # Node.js backend
-│   ├── index.js           # Main server file with API endpoints
-│   ├── models/            # MongoDB models
-│   │   ├── Order.js       # Order schema
-│   │   └── RiderFinishedDelivery.js # Delivery tracking
-│   └── package.json       # Backend dependencies
-├── index.html             # HTML entry point
-├── vite.config.ts         # Vite configuration
+├── frontend/               # React TypeScript frontend
+│   ├── admin/             # Admin dashboard components
+│   ├── auth/              # Authentication components
+│   ├── components/        # Reusable UI components
+│   │   ├── admin/         # Admin-specific components
+│   │   ├── cart/          # Shopping cart components
+│   │   ├── general/       # Header, footer, common components
+│   │   ├── home/          # Homepage sections
+│   │   ├── menu/          # Menu display and food cards
+│   │   ├── order/         # Order management components
+│   │   ├── reservation/   # Reservation components
+│   │   └── Rider/         # Rider dashboard components
+│   ├── routes/            # Page components
+│   ├── stores/            # Zustand state management
+│   ├── hooks/             # Custom React hooks
+│   ├── services/          # API and external services
+│   ├── config/            # Configuration files
+│   ├── Interfaces/        # TypeScript interfaces
+│   ├── assets/            # Static assets (fonts, images)
+│   └── public/            # Public assets
+├── backend/               # Node.js Express backend
+│   ├── models/            # MongoDB schemas
+│   └── utils/             # Utility functions
 ├── package.json           # Root dependencies and scripts
-└── pnpm-workspace.yaml    # PNPM workspace configuration
+├── pnpm-workspace.yaml    # PNPM workspace configuration
+├── eslint.config.js       # ESLint configuration
+└── start-dev.ps1          # Development startup script
 ```
 
 ## 🔧 Prerequisites
@@ -88,6 +76,7 @@ Zenith/
 - Node.js 18+
 - PNPM package manager
 - MongoDB database
+- Gmail account for email services
 
 ## ⚙️ Environment Setup
 
@@ -112,7 +101,8 @@ Zenith/
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret
    PORT=3000
-   EMAIL_SERVICE=your_email_service_config
+   EMAIL_USER=your_gmail_address
+   EMAIL_PASS=your_gmail_app_password
    ```
 
 ## 🚀 Development
@@ -130,6 +120,12 @@ Backend (Node.js server):
 ```bash
 cd backend
 node index.js
+```
+
+Or use the PowerShell script:
+
+```bash
+./start-dev.ps1
 ```
 
 The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`.
@@ -163,12 +159,13 @@ pnpm preview
 
 - **Menu System**: Interactive food cards with detailed popups
 - **Shopping Cart**: Full cart management with delivery/pickup options
-- **Reservations**: Table booking with comprehensive validation
+- **Reservations**: Table booking with comprehensive validation using [`CurrentReservations`](frontend/routes/CurrentReservations.tsx)
 - **Order Tracking**: Real-time order status updates
 
 ### Backend Features
 
 - **[API Server](backend/index.js)**: RESTful API with comprehensive endpoints
+- **[Email Service](backend/utils/sendEmail.js)**: Automated notifications using Nodemailer
 - **Automated Cleanup**: Cron jobs for cleaning expired data
 - **Order Cancellation**: User-initiated order cancellation system
 - **Email Verification**: Secure password reset with email codes
@@ -181,6 +178,8 @@ pnpm preview
 - ✅ **UX Enhancement**: Streamlined password reset flow without duplicate email entry
 - ✅ **Automated Cleanup**: Background jobs for database maintenance
 - ✅ **Order Management**: User cancellation functionality with proper API routing
+- ✅ **Email Notifications**: Welcome emails, order confirmations, and delivery updates
+- ✅ **Dark Theme**: Custom dark theme with proper input styling
 
 ## 🔒 User Roles
 
@@ -194,12 +193,13 @@ The application supports three user roles:
 
 The application features a modern design system with:
 
+- **Dark Theme**: Custom dark theme in [`app.css`](frontend/app.css) with #0e1113 background
+- **Brand Colors**: Primary red (#ff2100) for accents and branding
+- **Custom Fonts**: Quicksand font family for consistent typography
 - **Responsive Design**: Mobile-first approach with optimized touch interfaces
 - **Consistent Icons**: React Icons library for unified iconography
 - **Smooth Animations**: Framer Motion for enhanced user interactions
-- **Modern UI**: Clean layouts with proper spacing and typography
 - **Accessibility**: Proper focus states and keyboard navigation
-- **Color Scheme**: Carefully chosen colors with good contrast ratios
 
 ## 📋 Available Scripts
 
@@ -214,27 +214,42 @@ Check [package.json](package.json) for all available scripts:
 
 ### Key Models:
 
-- **Users**: Authentication and profile data
-- **Orders**: Order management with status tracking
+- **Users**: Authentication and profile data with password reset tokens
+- **Orders**: Order management with status tracking (confirmed, preparing, ready, out-for-delivery, delivered)
 - **Reservations**: Table booking with automated cleanup
-- **Menu Items**: Food catalog with categories
+- **Menu Items**: Food catalog with categories and pricing
+- **Accompaniments**: Side dishes and extras
 - **Riders**: Delivery personnel management
 
 ## 🔄 API Endpoints
 
 ### Authentication
 
-- `POST /api/login` - User authentication
-- `POST /api/register` - User registration
-- `POST /api/forgot-password` - Send reset code
-- `POST /api/reset-password` - Reset password with code
+- `POST /signup` - User registration with welcome email
+- `POST /login` - User authentication with case-insensitive login
+- `POST /forgot-password` - Send 6-digit reset code via email
+- `POST /reset-password` - Reset password with verification code
+- `POST /check-username` - Check username availability
 
-### Orders & Reservations
+### Orders & Menu
 
-- `GET /api/orders` - Fetch user orders
-- `POST /api/cancel-order` - Cancel user order
-- `POST /api/reservations` - Create reservation
-- `DELETE /api/reservations/:id` - Cancel reservation
+- `GET /menu` - Fetch menu items
+- `POST /orders` - Create new order
+- `GET /user/orders` - Fetch user orders
+- `POST /user/cancel-order` - Cancel user order
+- `POST /user/mark-finished` - Mark order as received
+
+### Reservations
+
+- `POST /reservations` - Create reservation
+- `GET /user/reservations` - Fetch user reservations
+- `DELETE /reservations/:id` - Cancel reservation
+
+### Admin Endpoints
+
+- `POST /admin/create-user` - Create new user account
+- `POST /admin/update-price` - Update menu item pricing
+- `POST /admin/update-order-status` - Update order status with email notifications
 
 ## 🤝 Contributing
 
@@ -258,9 +273,11 @@ Check [package.json](package.json) for all available scripts:
 
 For support and questions:
 
+- **Website**: [deblissfh.me](https://deblissfh.me)
+- **Email**: debliss2024@gmail.com
+- **Phone**: +233 25 628 6634
+- **Location**: Ecobank, Madina
 - Create an issue on GitHub
-- Check the documentation in `/docs`
-- Review the API endpoints above
 
 ## 📄 License
 
@@ -268,4 +285,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**De Bliss Restaurant** - Serving love in every dish with 10K+ happy customers and 50+ signature dishes. Experience the perfect blend of traditional flavors and modern technology.
+**De Bliss Food Hub** - Serving love in every dish with 10K+ happy customers and 50+ signature dishes. Experience the perfect blend of traditional Ghanaian flavors and modern technology.
+
+**Hours:**
+
+- Mon-Fri: 8:00 AM - 10:00 PM
+- Sat-Sun: 8:00 AM - 9:00 PM

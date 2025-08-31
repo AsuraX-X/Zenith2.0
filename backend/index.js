@@ -256,7 +256,7 @@ app.post("/signup", async (req, res) => {
               <p>Our team of passionate chefs is ready to serve you authentic Ghanaian cuisine made with the finest ingredients and lots of love.</p>
               
               <div class="cta">
-                <a href="http://localhost:5173/menu">Start Ordering Now</a>
+                <a href="https://deblissfh.me">Start Ordering Now</a>
               </div>
               
               <p>If you have any questions or need assistance, feel free to reach out to our friendly customer support team.</p>
