@@ -74,10 +74,16 @@ export const useLocationStore = create<locationStore>()(
 
           console.log(data);
 
+          // Filter out undefined address parts and create clean location name
+          const addressParts = [data.address.suburb, data.address.road].filter(
+            Boolean
+          );
+          const locationName = addressParts.join(", ");
+
           set((state) => ({
             location: {
               ...state.location,
-              name: `${data.address.suburb}, ${data.address.road}`,
+              name: locationName,
             },
           }));
           setAnimation("");

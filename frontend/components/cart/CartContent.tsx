@@ -294,34 +294,43 @@ const CartContent = () => {
                       <div className="divide-y divide-gray-500">
                         {addresses &&
                           addresses.length > 0 &&
-                          addresses.map(({ suburb, street }, i: number) => (
-                            <p
-                              key={i}
-                              onClick={() => {
-                                try {
-                                  const locationName = `${suburb || ""}, ${
-                                    street || ""
-                                  }`;
-                                  setLocation({
-                                    ...location,
-                                    name: locationName,
-                                  });
-                                  if (geocode) {
-                                    geocode(locationName);
+                          addresses.map(({ suburb, street }, i: number) => {
+                            // Filter out addresses where both suburb and street are undefined/empty
+                            if (!suburb && !street) return null;
+
+                            // Create display text and location name without "Unknown"
+                            const addressParts = [suburb, street].filter(
+                              Boolean
+                            );
+                            const displayText = addressParts.join(", ");
+                            const locationName = addressParts.join(", ");
+
+                            return (
+                              <p
+                                key={i}
+                                onClick={() => {
+                                  try {
+                                    setLocation({
+                                      ...location,
+                                      name: locationName,
+                                    });
+                                    if (geocode) {
+                                      geocode(locationName);
+                                    }
+                                    setIsOpen(false);
+                                  } catch (error) {
+                                    console.error(
+                                      "Error selecting location:",
+                                      error
+                                    );
                                   }
-                                  setIsOpen(false);
-                                } catch (error) {
-                                  console.error(
-                                    "Error selecting location:",
-                                    error
-                                  );
-                                }
-                              }}
-                              className="py-2 cursor-pointer hover:bg-[#23272b] transition-colors"
-                            >
-                              {suburb || "Unknown"}, {street || "Unknown"}
-                            </p>
-                          ))}
+                                }}
+                                className="py-2 cursor-pointer hover:bg-[#23272b] transition-colors"
+                              >
+                                {displayText}
+                              </p>
+                            );
+                          })}
                       </div>
                     </motion.div>
                   </div>
